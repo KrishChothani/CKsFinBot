@@ -1,0 +1,52 @@
+# Web Framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+# mangum[http]
+
+# Data Validation
+pydantic[email]==2.9.2
+pydantic-settings==2.6.0
+
+# AWS SDK
+boto3==1.35.36
+
+# Token Counting
+tiktoken==0.8.0
+
+# LangChain Core (FIXED VERSIONS FOR COMPATIBILITY)
+langchain==0.3.7
+langchain-core==0.3.20
+langchain-community==0.3.5
+langchain-openai==0.2.5
+langchain-text-splitters==0.3.2
+langchain-pinecone==0.2.0
+
+
+# LangSmith (MUST match langchain requirements)
+langsmith==0.1.145
+
+# Vector Database (latest stable version compatible with langchain-pinecone 0.2.12)
+pinecone-client==5.0.1
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# HTTP Requests
+requests==2.32.3
+
+# PDF Processing
+pypdf==5.0.1
+
+# OpenAI API (Compatible with langchain-openai 0.2.5)
+openai==1.54.3
+
+# File Upload Support
+python-multipart==0.0.12
+
+langchain-google-genai
+
+sentence-transformers
+
+PyMuPDF==1.26.5
+
+langchain-huggingface

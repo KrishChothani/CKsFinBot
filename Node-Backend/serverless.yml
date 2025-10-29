@@ -1,0 +1,87 @@
+service: cksfinbot-backend
+
+frameworkVersion: ">=3.0.0 <5.0.0"
+useDotenv: true
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  timeout: 60
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*' 
+  environment:
+    PORT: 2590
+    MONGODB_URI: ${env:MONGODB_URI}
+    CORS_ORIGIN: ${env:CORS_ORIGIN}
+    JWT_SECRET: ${env:JWT_SECRET}
+    ACCESS_TOKEN_SECRET: ${env:ACCESS_TOKEN_SECRET}
+    ACCESS_TOKEN_EXPIRY: ${env:ACCESS_TOKEN_EXPIRY}
+    REFRESH_TOKEN_SECRET: ${env:REFRESH_TOKEN_SECRET}
+    REFRESH_TOKEN_EXPIRY: ${env:REFRESH_TOKEN_EXPIRY}
+    CLOUDINARY_CLOUD_NAME: ${env:CLOUDINARY_CLOUD_NAME}
+    CLOUDINARY_API_KEY: ${env:CLOUDINARY_API_KEY}
+    CLOUDINARY_API_SECRET: ${env:CLOUDINARY_API_SECRET}
+    EMAIL_ID_FOR_VERIFICATION: ${env:EMAIL_ID_FOR_VERIFICATION}
+    EMAIL_PASSWORD_FOR_VERIFICATION: ${env:EMAIL_PASSWORD_FOR_VERIFICATION}
+    GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    NEWS_API_KEY: ${env:NEWS_API_KEY}
+
+functions:
+  app:
+    handler: lambda.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: any
+          cors:
+            origin: ${env:CORS_ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Credentials
+              - Set-Cookie
+            allowCredentials: true
+
+
+plugins:
+  # - serverless-esbuild
+  - serverless-dotenv-plugin
+  - serverless-offline
+
+
+custom:
+  dotenv:
+    path: .env
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node20
+    exclude: ['aws-sdk']
+    define:
+      'require.resolve': undefined
+    platform: node
+
+package:
+  patterns:
+    - '!node_modules/aws-sdk/**'   # AWS SDK is available by default in Lambda
+    - '!node_modules/.bin/**'
+    - '!node_modules/**/test/**'
+    - '!node_modules/**/tests/**'
+    - '!node_modules/**/docs/**'
+    - '!node_modules/**/.github/**'
+    - '!*.test.js'
+    - '!*.spec.js'
+    - '!*.zip'
+    - '!*.log'
+    - '!Public/**'
+    - '!README.md'
+    - '!coverage/**'
+    - '!scripts/**'
+    - '!docs/**'

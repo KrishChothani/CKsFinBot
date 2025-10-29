@@ -1,0 +1,73 @@
+service: cksfinbot-python-backend
+
+frameworkVersion: ">=3.0.0 <5.0.0"
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ap-south-1
+  timeout: 600
+
+  environment:
+    GOOGLE_API_KEY: ${env:GOOGLE_API_KEY}
+    PINECONE_API_KEY: ${env:PINECONE_API_KEY}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    AWS_REGION: ${env:AWS_REGION}
+    NODE_WEBHOOK_URL: ${env:NODE_WEBHOOK_URL}
+
+functions:
+  api:
+    handler: handler.app
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: any
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+  - serverless-offline
+
+custom:
+  dotenv:
+    path: .env
+
+  pythonRequirements:
+      dockerizePip: true
+      useStaticCache: true
+      useDownloadCache: true
+      invalidateCaches: true     
+      fileName: requirements.txt 
+      layer: true                   
+      slim: false                    
+      strip: true
+      zip: true                     
+      slimPatterns:                 
+        - "**/*.pyc"
+        - "**/*.pyo"
+        - "**/__pycache__/**"
+        - "**/*.dist-info/**"
+        - "**/*.egg-info/**"
+
+  serverless-offline:
+    httpPort: 7000   # 👈 Custom port for offline dev
+    lambdaPort: 7070
+    noPrependStageInUrl: true
+
+package:
+  individually: false
+  patterns:
+    - "!node_modules/**"
+    - "!__pycache__/**"
+    - "!tests/**"
+    - "!venv/**"
+    - "!myenv/**"  
+    - "!*.log"
+    - "!*.zip"
+    - "!README.md"
+    - "!.pytest_cache/**"
+    - "!.mypy_cache/**"
+    - "**/*.py"
+    - "requirements.txt"

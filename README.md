@@ -215,20 +215,16 @@ CKsFinBot offers 5 distinct modes for different use cases:
 - **Use Cases**: PDF analysis, financial statement review, report summarization
 - **Example**: "Summarize the key insights from this quarterly report"
 
-#### 3. 📈 Analytical Insights
+#### 3. 📈 Financial Templete Generation
 - **Purpose**: Advanced financial calculations and trend analysis
 - **Use Cases**: Ratio calculations, performance metrics, trend analysis
 - **Example**: "Calculate the debt-to-equity ratio trends over the last 3 years"
-
+- 
 #### 4. 💬 General Conversation
 - **Purpose**: Casual finance discussions and educational Q&A
 - **Use Cases**: Learning financial concepts, basic questions, definitions
 - **Example**: "What's the difference between stocks and bonds?"
 
-#### 5. 🔍 Multi-Document Search
-- **Purpose**: Search and compare across multiple uploaded documents
-- **Use Cases**: Cross-document analysis, comparative studies, research
-- **Example**: "Compare revenue growth across all uploaded annual reports"
 
 ### 📁 File Upload Features
 

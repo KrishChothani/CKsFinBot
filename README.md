@@ -78,6 +78,94 @@ graph TB
 - **Pinecone** - Vector search
 - **Vercel** - Frontend deployment
 
+
+#### Project Structure
+
+```text
+Python-Backend/
+│
+├── app/
+│   ├── api/
+│   │   └── endpoints.py
+│   │
+│   ├── core/
+│   │   └── config.py
+│   │
+│   ├── schemas/
+│   │   └── models.py
+│   │
+│   └── services/
+│       ├── document_processor.py
+│       ├── llm_service.py
+│       ├── multi_modal_processor.py
+│       ├── pinecone_service.py
+│       ├── s3_service.py
+│       ├── main.py
+│       └── prompts.py
+│
+├── src/
+│   └── Function/
+│       └── index.js
+│
+├── .gitignore
+├── handler.py
+├── package-lock.json
+├── package.json
+├── requirements.txt
+├── serverless.yml
+└── README.md
+
+
+
+Node-Backend/
+│
+├── .esbuild/
+│   └── .build/
+│
+├── src/
+│   ├── Controllers/
+│   ├── Middlewares/
+│   ├── Models/
+│   ├── Routes/
+│   ├── Utils/
+│   └── db/
+│
+├── Constants.js
+├── app.js
+├── index.js
+├── lambda.js
+├── .gitignore
+├── package-lock.json
+├── package.json
+└── serverless.yml
+
+
+Frontend/
+│
+├── public/
+│   ├── index.html
+│   └── ...
+│
+├── src/
+│   ├── Config/
+│   ├── JSX/
+│   ├── assets/
+│   ├── services/
+│   │
+│   ├── App.css
+│   ├── App.jsx
+│   ├── index.css
+│   └── main.jsx
+│
+├── .env
+├── .gitignore
+├── README.md
+├── eslint.config.js
+├── package-lock.json
+└── package.json
+```
+
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -403,19 +491,12 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 ## 👥 Team
 
 **Team CKsDev**
-- Full-stack development
-- AI/ML integration
-- Cloud architecture
-- UI/UX design
+- 23BCE151 [ KRISH CHOTHANI ]
+- 23BCE039 
+- 23BCE028
+- 23BCE184
+- 23BCE200
 
-## 🆘 Support
-
-For support and questions:
-
-- 📧 Email: support@cksfinbot.com
-- 💬 Discord: [Join our community](https://discord.gg/cksfinbot)
-- 📖 Documentation: [docs.cksfinbot.com](https://docs.cksfinbot.com)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/CKsFinBot/issues)
 
 <!-- ## 🗺️ Roadmap
 

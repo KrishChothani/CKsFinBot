@@ -488,10 +488,11 @@ We welcome contributions! Please follow these steps:
 
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
+
+<!--
 ## 👥 Team
 
 
-<!--
 **Team CKsDev**
 - 23BCE151 [ KRISH CHOTHANI ]
 - 23BCE039 

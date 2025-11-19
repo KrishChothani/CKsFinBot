@@ -490,12 +490,14 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
+
+<!--
 **Team CKsDev**
 - 23BCE151 [ KRISH CHOTHANI ]
 - 23BCE039 
 - 23BCE028
 - 23BCE184
-- 23BCE200
+- 23BCE200 -->
 
 
 <!-- ## 🗺️ Roadmap

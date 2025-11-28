@@ -12,7 +12,7 @@ async def process_document(request: ProcessDocumentRequest, background_tasks: Ba
     """
     Receives a document and starts the multi-modal ingestion process.
     """
-    try:
+    try:    
         background_tasks.add_task(
             smart_chat_ingestion_pipeline,
             request.documentId,

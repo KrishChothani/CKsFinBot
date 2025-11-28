@@ -27,7 +27,7 @@ const conversationSchema = new Schema(
         "General_Conversation", // Normal chat, definitions, or finance Q&A
         "Document_Analysis", // PDF/Excel understanding
         "Analytical_Insights", // Ratio/trend/calculation queries
-        "Multi_Document_Search", // Cross-company/period comparison
+        // "Multi_Document_Search", // Cross-company/period comparison
         "Smart_Chat", // Unified intelligent mode
       ],
       default: "Smart_Chat",

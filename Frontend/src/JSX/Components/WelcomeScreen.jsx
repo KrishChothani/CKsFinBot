@@ -44,10 +44,10 @@ const WelcomeScreen = ({ feature, onExampleClick, onFeatureSelect }) => {
         "Extract financial metrics from this report"
       ]
     },
-    Analytical_Insights: {
+    Templet_Generation: {
       icon: TrendingUp,
-      title: "Analytical Insights",
-      description: "Advanced financial calculations and trend analysis",
+      title: "Templet Generation",
+      description: "Advanced financial document Templet Generation",
       color: "from-purple-500 to-pink-500",
       examples: [
         "Calculate the debt-to-equity ratio trends",
@@ -68,18 +68,18 @@ const WelcomeScreen = ({ feature, onExampleClick, onFeatureSelect }) => {
         "What are some basic budgeting tips?"
       ]
     },
-    Multi_Document_Search: {
-      icon: Search,
-      title: "Multi-Document Search",
-      description: "Search and compare across multiple documents",
-      color: "from-indigo-500 to-purple-500",
-      examples: [
-        "Compare revenue across all uploaded reports",
-        "Find mentions of 'risk factors' in all documents",
-        "What are the common themes across these files?",
-        "Search for specific metrics in multiple reports"
-      ]
-    }
+    // Multi_Document_Search: {
+    //   icon: Search,
+    //   title: "Multi-Document Search",
+    //   description: "Search and compare across multiple documents",
+    //   color: "from-indigo-500 to-purple-500",
+    //   examples: [
+    //     "Compare revenue across all uploaded reports",
+    //     "Find mentions of 'risk factors' in all documents",
+    //     "What are the common themes across these files?",
+    //     "Search for specific metrics in multiple reports"
+    //   ]
+    // }
   };
 
   const currentFeature = features[feature] || features.Smart_Chat;

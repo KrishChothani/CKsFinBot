@@ -8,9 +8,9 @@ const FeatureSelector = ({ feature, setFeature }) => {
   const features = {
     Smart_Chat: "🤖 Smart Chat (Text + Image)",
     Document_Analysis: "📄 Document Analysis",
-    Analytical_Insights: "📈 Analytical Insights",
+    Analytical_Insights: "📈 Templet Generation",
     General_Conversation: "💬 General Conversation",
-    Multi_Document_Search: "📚 Multi-Document Search", // Can add later
+    // Multi_Document_Search: "📚 Multi-Document Search", // Can add later
   };
 
   return (

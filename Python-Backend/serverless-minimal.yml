@@ -1,0 +1,68 @@
+# serverless-minimal.yml (FINAL CORRECTED VERSION)
+
+service: cksfinbot-python-backend
+
+frameworkVersion: ">=3.0.0 <5.0.0"
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ap-south-1
+  # CORRECTED: Timeout set to 30s to match the API Gateway's maximum.
+  timeout: 30
+  memorySize: 1024
+
+  environment:
+    # CRITICAL FIX: The reserved AWS_* variables have been completely removed.
+    # AWS provides these to your function automatically.
+    GOOGLE_API_KEY: ${env:GOOGLE_API_KEY}
+    PINECONE_API_KEY: ${env:PINECONE_API_KEY}
+    NODE_WEBHOOK_URL: ${env:NODE_WEBHOOK_URL}
+
+functions:
+  api:
+    handler: handler.app
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: any
+    # This layer requires your deploy user to have lambda:GetLayerVersion permission.
+    # If you still get a permission error, remove these two lines.
+    layers:
+      - arn:aws:lambda:ap-south-1:017000801446:layer:AWSLambdaPowertoolsPythonV2:68
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+
+custom:
+  dotenv:
+    path: .env
+    exclude:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_REGION
+      # - AWS_SESSION_TOKEN # Good to exclude this one too
+
+  pythonRequirements:
+    # CRITICAL FIX: Docker is required to build packages correctly for Lambda.
+    dockerizePip: false
+    fileName: requirements.txt
+    layer: false
+    slim: true
+    noDeploy:
+      - boto3
+      - botocore
+    pipCmdExtraArgs:
+      # CRITICAL FIX: Removed '--no-deps' to ensure all sub-dependencies are installed.
+      - --no-cache-dir
+      - --disable-pip-version-check
+
+package:
+  individually: false
+  patterns:
+    - "!**"
+    - "app/**"
+    - "handler.py"
+    - "requirements-minimal.txt"

@@ -1,6 +1,6 @@
 # app/services/multi_modal_processor.py
 
-import pymupdf as fitz  # Import the library by its official name and alias it to fitz
+from pypdf import PdfReader  # Using pypdf instead of PyMuPDF for better compatibility
 import base64
 import requests
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -10,6 +10,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from app.core.config import settings
 from .s3_service import download_file_from_s3
 from langchain_core.messages import HumanMessage
+from io import BytesIO
+
 
 try:
     print("🧠 Loading HuggingFace embeddings model...")
@@ -113,21 +115,21 @@ def smart_chat_ingestion_pipeline(document_id: str, s3_url: str, pinecone_namesp
         print(f"✅ Text splitter configured: chunk_size=1000, overlap=150")
         
         print(f"\n📖 Opening PDF document...")
-        doc = fitz.open(local_path)
-        total_pages = len(doc)
+        reader = PdfReader(local_path)
+        total_pages = len(reader.pages)
         print(f"✅ PDF opened successfully: {total_pages} pages")
         
         all_chunks = []
         text_chunks_count = 0
         image_chunks_count = 0
         
-        for page_num, page in enumerate(doc):
+        for page_num, page in enumerate(reader.pages):
             print(f"\n📄 Processing page {page_num + 1}/{total_pages}...")
             
             # 1. Process Text
             print(f"📝 Extracting text from page {page_num + 1}...")
-            text = page.get_text("text")
-            if text.strip():
+            text = page.extract_text()
+            if text and text.strip():
                 text_chunks = text_splitter.create_documents([text], metadatas=[{"page": page_num + 1, "type": "text"}])
                 all_chunks.extend(text_chunks)
                 text_chunks_count += len(text_chunks)
@@ -135,24 +137,28 @@ def smart_chat_ingestion_pipeline(document_id: str, s3_url: str, pinecone_namesp
             else:
                 print(f"⚠️  No text found on page {page_num + 1}")
             
-            # 2. Process Images
-            images = page.get_images(full=True)
+            # 2. Process Images (pypdf has limited image extraction, focusing on text for now)
+            # Note: pypdf doesn't have robust image extraction like PyMuPDF
+            # For production, consider using a dedicated image extraction library if needed
+            images = page.images if hasattr(page, 'images') else []
             print(f"🖼️  Found {len(images)} images on page {page_num + 1}")
             
             for img_index, img in enumerate(images):
-                print(f"🖼️  Processing image {img_index + 1}/{len(images)} on page {page_num + 1}...")
-                
-                xref = img[0]
-                base_image = doc.extract_image(xref)
-                image_bytes = base_image["image"]
-                
-                caption = get_image_caption(image_bytes, vision_llm)
-                caption_with_context = f"Context from an image on page {page_num + 1}: {caption}"
-                
-                image_chunk = text_splitter.create_documents([caption_with_context], metadatas=[{"page": page_num + 1, "type": "image"}])
-                all_chunks.extend(image_chunk)
-                image_chunks_count += len(image_chunk)
-                print(f"✅ Image processed: {len(image_chunk)} chunks created")
+                try:
+                    print(f"🖼️  Processing image {img_index + 1}/{len(images)} on page {page_num + 1}...")
+                    
+                    # pypdf image extraction
+                    image_bytes = img.data
+                    
+                    caption = get_image_caption(image_bytes, vision_llm)
+                    caption_with_context = f"Context from an image on page {page_num + 1}: {caption}"
+                    
+                    image_chunk = text_splitter.create_documents([caption_with_context], metadatas=[{"page": page_num + 1, "type": "image"}])
+                    all_chunks.extend(image_chunk)
+                    image_chunks_count += len(image_chunk)
+                    print(f"✅ Image processed: {len(image_chunk)} chunks created")
+                except Exception as img_error:
+                    print(f"⚠️  Could not process image {img_index + 1}: {img_error}")
 
         print(f"\n📊 PROCESSING SUMMARY:")
         print(f"📝 Text chunks: {text_chunks_count}")

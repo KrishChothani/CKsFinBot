@@ -19,12 +19,18 @@ def download_file_from_s3(s3_url: str) -> str:
     os.makedirs(temp_dir, exist_ok=True)
     local_file_path = os.path.join(temp_dir, os.path.basename(object_key))
 
-    s3_client = boto3.client(
-        's3',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID or None,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY or None,
-        region_name=settings.AWS_REGION
-    )
+    # In Lambda, boto3 automatically uses IAM role credentials
+    # Only provide explicit credentials if they exist
+    s3_config = {'service_name': 's3'}
+    
+    if settings.AWS_ACCESS_KEY_ID:
+        s3_config['aws_access_key_id'] = settings.AWS_ACCESS_KEY_ID
+    if settings.AWS_SECRET_ACCESS_KEY:
+        s3_config['aws_secret_access_key'] = settings.AWS_SECRET_ACCESS_KEY
+    
+    s3_config['region_name'] = settings.aws_region
+    
+    s3_client = boto3.client(**s3_config)
     
     s3_client.download_file(bucket_name, object_key, local_file_path)
     

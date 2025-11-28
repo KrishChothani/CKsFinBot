@@ -78,6 +78,97 @@ graph TB
 - **Pinecone** - Vector search
 - **Vercel** - Frontend deployment
 
+<<<<<<< HEAD
+=======
+
+#### Project Structure
+
+```text
+Python-Backend/
+│
+├── app/
+│   ├── api/
+│   │   └── endpoints.py
+│   │
+│   ├── core/
+│   │   └── config.py
+│   │
+│   ├── schemas/
+│   │   └── models.py
+│   │
+│   └── services/
+│       ├── document_processor.py
+│       ├── llm_service.py
+│       ├── multi_modal_processor.py
+│       ├── pinecone_service.py
+│       ├── s3_service.py
+│       ├── main.py
+│       └── prompts.py
+│
+├── src/
+│   └── Function/
+│       └── index.js
+│
+├── .gitignore
+├── handler.py
+├── package-lock.json
+├── package.json
+├── requirements.txt
+├── serverless.yml
+└── README.md
+
+
+
+Node-Backend/
+│
+├── .esbuild/
+│   └── .build/
+│
+├── src/
+│   ├── Controllers/
+│   ├── Middlewares/
+│   ├── Models/
+│   ├── Routes/
+│   ├── Utils/
+│   └── db/
+│
+├── Constants.js
+├── app.js
+├── index.js
+├── lambda.js
+├── .gitignore
+├── package-lock.json
+├── package.json
+└── serverless.yml
+
+
+Frontend/
+│
+├── public/
+│   ├── index.html
+│   └── ...
+│
+├── src/
+│   ├── Config/
+│   ├── JSX/
+│   ├── assets/
+│   ├── services/
+│   │
+│   ├── App.css
+│   ├── App.jsx
+│   ├── index.css
+│   └── main.jsx
+│
+├── .env
+├── .gitignore
+├── README.md
+├── eslint.config.js
+├── package-lock.json
+└── package.json
+```
+
+
+>>>>>>> 86d1d1d879489e68e675b3de0c1490d596abdd77
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -215,20 +306,31 @@ CKsFinBot offers 5 distinct modes for different use cases:
 - **Use Cases**: PDF analysis, financial statement review, report summarization
 - **Example**: "Summarize the key insights from this quarterly report"
 
+<<<<<<< HEAD
 #### 3. 📈 Analytical Insights
 - **Purpose**: Advanced financial calculations and trend analysis
 - **Use Cases**: Ratio calculations, performance metrics, trend analysis
 - **Example**: "Calculate the debt-to-equity ratio trends over the last 3 years"
 
+=======
+#### 3. 📈 Financial Templete Generation
+- **Purpose**: Advanced financial calculations and trend analysis
+- **Use Cases**: Ratio calculations, performance metrics, trend analysis
+- **Example**: "Calculate the debt-to-equity ratio trends over the last 3 years"
+- 
+>>>>>>> 86d1d1d879489e68e675b3de0c1490d596abdd77
 #### 4. 💬 General Conversation
 - **Purpose**: Casual finance discussions and educational Q&A
 - **Use Cases**: Learning financial concepts, basic questions, definitions
 - **Example**: "What's the difference between stocks and bonds?"
 
+<<<<<<< HEAD
 #### 5. 🔍 Multi-Document Search
 - **Purpose**: Search and compare across multiple uploaded documents
 - **Use Cases**: Cross-document analysis, comparative studies, research
 - **Example**: "Compare revenue growth across all uploaded annual reports"
+=======
+>>>>>>> 86d1d1d879489e68e675b3de0c1490d596abdd77
 
 ### 📁 File Upload Features
 
@@ -404,6 +506,7 @@ We welcome contributions! Please follow these steps:
 
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
+<<<<<<< HEAD
 ## 👥 Team
 
 **Team CKsDev**
@@ -420,6 +523,20 @@ For support and questions:
 - 💬 Discord: [Join our community](https://discord.gg/cksfinbot)
 - 📖 Documentation: [docs.cksfinbot.com](https://docs.cksfinbot.com)
 - 🐛 Issues: [GitHub Issues](https://github.com/your-username/CKsFinBot/issues)
+=======
+
+<!--
+## 👥 Team
+
+
+**Team CKsDev**
+- 23BCE151 [ KRISH CHOTHANI ]
+- 23BCE039 
+- 23BCE028
+- 23BCE184
+- 23BCE200 -->
+
+>>>>>>> 86d1d1d879489e68e675b3de0c1490d596abdd77
 
 <!-- ## 🗺️ Roadmap
 
@@ -444,4 +561,8 @@ For support and questions:
 
 [⭐ Star this repo](https://github.com/your-username/CKsFinBot) | [🐛 Report Bug](https://github.com/your-username/CKsFinBot/issues) | [💡 Request Feature](https://github.com/your-username/CKsFinBot/issues)
 
+<<<<<<< HEAD
 </div>
+=======
+</div>
+>>>>>>> 86d1d1d879489e68e675b3de0c1490d596abdd77

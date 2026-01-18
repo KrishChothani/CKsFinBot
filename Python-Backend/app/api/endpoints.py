@@ -9,9 +9,7 @@ router = APIRouter()
 
 @router.post("/process-document")
 async def process_document(request: ProcessDocumentRequest, background_tasks: BackgroundTasks):
-    """
-    Receives a document and starts the multi-modal ingestion process.
-    """
+    
     try:
         background_tasks.add_task(
             smart_chat_ingestion_pipeline,
@@ -29,9 +27,6 @@ async def process_document(request: ProcessDocumentRequest, background_tasks: Ba
 
 @router.post("/query", response_model=QueryResponse)
 async def query_documents(request: QueryRequest):
-    """
-    Receives a query and routes it to the correct RAG pipeline based on the conversation's feature mode.
-    """
     try:
         answer = await get_answer_from_rag(
             request.question,

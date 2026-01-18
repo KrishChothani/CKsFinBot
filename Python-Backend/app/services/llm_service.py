@@ -241,25 +241,22 @@ from app.prompts import (
 )
 
 from .pinecone_service import get_pinecone_client
+from app.core.model_loader import llm_model, embedding_model
+
 
 def format_docs(docs: list) -> str:
-    """Helper function to format retrieved documents into a single string."""
     if not docs:
         return "No relevant documents found."
     return "\n---\n".join([doc.page_content for doc in docs])
 
 def format_chat_history(chat_history: list) -> str:
-    """Formats chat history into a readable string."""
+ 
     if not chat_history:
         return "No previous conversation."
     return "\n".join([f"{msg.get('role', 'unknown').capitalize()}: {msg.get('content', '')}" for msg in chat_history])
 
 async def retrieve_from_multiple_namespaces(embeddings, question: str, namespaces: list):
-    """
-    Dynamically determines search 'k' by using the existing get_pinecone_client() helper
-    to get namespace stats, then runs retrievals concurrently.
-    Returns empty list if no namespaces exist or retrieval fails.
-    """
+   
     if not namespaces:
         print("⚠️  No namespaces provided for retrieval.")
         return []
@@ -414,7 +411,6 @@ async def analytical_insights_pipeline(llm, embeddings, question: str, chat_hist
     return await chain.ainvoke({"question": question, "chat_history": chat_history})
 
 async def general_conversation_pipeline(llm, question: str, chat_history: str):
-    """A simple conversational chain without document retrieval, built with LCEL."""
     print("🚀 Executing General Conversation Pipeline with LCEL")
     
     prompt = PromptTemplate.from_template(GENERAL_CONVERSATION_PROMPT_TEMPLATE)
@@ -424,26 +420,14 @@ async def general_conversation_pipeline(llm, question: str, chat_history: str):
     return await conversation_chain.ainvoke({"question": question, "chat_history": chat_history})
 
 
+
 async def get_answer_from_rag(question: str, chat_history: list, pinecone_namespaces: list, feature_mode: str) -> str:
-    """
-    Initializes models and routes the request to the correct RAG pipeline.
-    Always sends queries to LLM regardless of namespace/document availability.
-    """
     print(f"🎯 Router: Processing query with feature_mode='{feature_mode}'")
     
-    # Initialize models once per request
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-exp", 
-        temperature=0, 
-        google_api_key=settings.GOOGLE_API_KEY, 
-        convert_system_message_to_human=True
-    )
-    embeddings = HuggingFaceEmbeddings(
-        model_name='sentence-transformers/all-MiniLM-L6-v2',
-        model_kwargs={'device': 'cpu'},
-        encode_kwargs={'normalize_embeddings': True}
-    )
-    print("✅ Models initialized.")
+    # Use global models
+    llm = llm_model
+    embeddings = embedding_model
+    print("✅ Global Models used.")
     
     # Format chat history once
     formatted_history = format_chat_history(chat_history)

@@ -10,33 +10,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from app.core.config import settings
 from .s3_service import download_file_from_s3
 from langchain_core.messages import HumanMessage
+from app.core.model_loader import llm_model, embedding_model
 
-try:
-    print("🧠 Loading HuggingFace embeddings model...")
-    EMBEDDING_MODEL = HuggingFaceEmbeddings(
-        model_name='sentence-transformers/all-MiniLM-L6-v2',
-        model_kwargs={'device': 'cpu'},
-        encode_kwargs={'normalize_embeddings': True}
-    )
-    print("✅ HuggingFace embeddings model loaded successfully.")
-except Exception as e:
-    print(f"❌ CRITICAL ERROR: Failed to load embeddings model: {e}")
-    # In a real app, you might want the app to exit if this fails
-    EMBEDDING_MODEL = None 
-
-# --- VISION LLM ---
-# Also good practice to initialize clients once.
-try:
-    print("👁️  Initializing Google Gemini vision model...")
-    # IMPORTANT: Use a stable, public model name for vision
-    VISION_LLM = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash-latest", 
-        google_api_key=settings.GOOGLE_API_KEY
-    )
-    print("✅ Google Gemini vision model initialized successfully.")
-except Exception as e:
-    print(f"❌ CRITICAL ERROR: Failed to initialize vision model: {e}")
-    VISION_LLM = None
+# Models are now loaded from core.model_loader
 
 def get_image_caption(image_bytes: bytes, llm: ChatGoogleGenerativeAI) -> str:
     """Uses Gemini Vision to generate a caption for an image."""
@@ -106,8 +82,10 @@ def smart_chat_ingestion_pipeline(document_id: str, s3_url: str, pinecone_namesp
         #     encode_kwargs={'normalize_embeddings': True}
         # )
             
-        vision_llm = ChatGoogleGenerativeAI(model="gemma-3-12b-it", google_api_key=settings.GOOGLE_API_KEY)
-        print(f"✅ Vision LLM initialized: gemma-3-12b-it")
+        
+        # Using global LLM model for vision tasks
+        vision_llm = llm_model
+        print(f"✅ Vision LLM initialized: Global Model")
         
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
         print(f"✅ Text splitter configured: chunk_size=1000, overlap=150")
@@ -168,7 +146,7 @@ def smart_chat_ingestion_pipeline(document_id: str, s3_url: str, pinecone_namesp
         
         PineconeVectorStore.from_documents(
             documents=all_chunks,
-            embedding=EMBEDDING_MODEL,
+            embedding=embedding_model,
             index_name="cksfinbot",
             namespace=pinecone_namespace
         )

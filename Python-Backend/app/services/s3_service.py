@@ -21,9 +21,9 @@ def download_file_from_s3(s3_url: str) -> str:
 
     s3_client = boto3.client(
         's3',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID or None,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY or None,
-        region_name=settings.AWS_REGION
+        aws_access_key_id=settings.MY_AWS_ACCESS_KEY_ID or None,
+        aws_secret_access_key=settings.MY_AWS_SECRET_ACCESS_KEY or None,
+        region_name=settings.MY_AWS_REGION
     )
     
     s3_client.download_file(bucket_name, object_key, local_file_path)

@@ -51,7 +51,7 @@ const SignUp = () => {
       <div className="relative z-20 flex flex-col items-center w-full">
         <div className="mb-8">
           {/* KEY CHANGE: Updated logo alt text */}
-          <img src="/logo.png" alt="CKsFinBot Logo" className="h-20 w-auto" />
+          <img src="/logo1.png" alt="CKsFinBot Logo" className="h-20 w-auto" />
         </div>
 
         <div className="w-full max-w-md p-8 space-y-8 bg-black/30 backdrop-blur-lg rounded-2xl shadow-lg border border-blue-500/30 shadow-blue-500/10">

@@ -1,0 +1,7 @@
+{
+  "minOverallFieldAccuracy": 0.90,
+  "minDocumentFullyCorrectRate": 0.80,
+  "maxFalseAcceptRate": 0.00,
+  "comment": "Under no circumstances may the false-accept rate exceed 0.00% (No unverified number reaches the books)."
+}
+

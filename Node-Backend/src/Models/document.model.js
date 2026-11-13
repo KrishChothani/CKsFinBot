@@ -4,34 +4,108 @@ import mongoose, { Schema } from "mongoose";
 
 const documentSchema = new Schema(
   {
+    firm: {
+      type: Schema.Types.ObjectId,
+      ref: "Firm",
+      index: true,
+    },
+    client: {
+      type: Schema.Types.ObjectId,
+      ref: "Client",
+      index: true,
+    },
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
     conversation: {
       type: Schema.Types.ObjectId,
       ref: "Conversation",
-      required: true,
+      index: true,
     },
     fileName: {
       type: String,
       required: true,
       trim: true,
     },
-    s3Url: {
-      type: String,
-      required: true,
+    fileSize: {
+      type: Number,
+      default: 0,
     },
     fileType: {
       type: String,
       required: true,
     },
+    fileHash: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    s3Url: {
+      type: String,
+      required: true,
+    },
+    documentType: {
+      type: String,
+      enum: [
+        "Purchase_Invoice",
+        "Sales_Invoice",
+        "Expense_Bill",
+        "Bank_Statement",
+        "Credit_Note",
+        "Debit_Note",
+        "GSTR_2B",
+        "GSTR_3B",
+        "TDS_26AS",
+        "Salary_Slip",
+        "Unknown",
+      ],
+      default: "Unknown",
+      index: true,
+    },
+    source: {
+      type: String,
+      enum: ["Web_Upload", "Email_Forward", "Client_Portal"],
+      default: "Web_Upload",
+    },
     status: {
       type: String,
       required: true,
-      enum: ["uploading", "processing", "processed", "failed"],
-      default: "uploading",
+      enum: [
+        "Queued",
+        "Processing",
+        "Needs_Review",
+        "Approved",
+        "Voucher_Created",
+        "Failed",
+        // Legacy aliases for backward compatibility
+        "uploading",
+        "processing",
+        "processed",
+        "failed",
+      ],
+      default: "Queued",
+      index: true,
+    },
+    extractedDataId: {
+      type: Schema.Types.ObjectId,
+      ref: "ExtractedData",
+      index: true,
+    },
+    voucherId: {
+      type: Schema.Types.ObjectId,
+      ref: "Voucher",
+      index: true,
+    },
+    isDuplicate: {
+      type: Boolean,
+      default: false,
+    },
+    duplicateOf: {
+      type: Schema.Types.ObjectId,
+      ref: "Document",
     },
     errorMessage: {
       type: String,
@@ -39,11 +113,14 @@ const documentSchema = new Schema(
     },
     pineconeNamespace: {
       type: String,
-      required: true,
-      unique: true,
+      trim: true,
     },
   },
   { timestamps: true }
 );
+
+// Compound index for client deduplication query
+documentSchema.index({ client: 1, fileHash: 1 });
+documentSchema.index({ client: 1, status: 1 });
 
 export const Document = mongoose.model("Document", documentSchema);

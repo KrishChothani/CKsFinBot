@@ -1,1 +1,145 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-app: #f8fafc;
+    --surface: #ffffff;
+    --surface-raised: #f1f5f9;
+    --surface-subtle: #f8fafc;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --text-inverse: #ffffff;
+
+    /* Deep Teal / Emerald Primary */
+    --primary: #0f766e;
+    --primary-hover: #115e59;
+    --primary-active: #134e4a;
+    --primary-light: #ccfbf1;
+    --primary-border: #99f6e4;
+    --primary-foreground: #ffffff;
+
+    /* Warm Amber Accent */
+    --accent: #d97706;
+    --accent-hover: #b45309;
+    --accent-light: #fef3c7;
+    --accent-border: #fde68a;
+    --accent-foreground: #ffffff;
+
+    /* Semantic States */
+    --success: #15803d;
+    --success-light: #dcfce7;
+    --success-border: #bbf7d0;
+    --warning: #b45309;
+    --warning-light: #fef3c7;
+    --warning-border: #fde68a;
+    --danger: #b91c1c;
+    --danger-light: #fee2e2;
+    --danger-border: #fecaca;
+    --info: #0284c7;
+    --info-light: #e0f2fe;
+    --info-border: #bae6fd;
+
+    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    --bg-app: #0f172a; /* Soft charcoal */
+    --surface: #1e293b; /* Elevated surface */
+    --surface-raised: #334155; /* Higher elevation card/popover */
+    --surface-subtle: #1e293b;
+    --border: #334155;
+    --border-strong: #475569;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-inverse: #0f172a;
+
+    /* Vibrant Teal for Dark Mode (WCAG AA accessible) */
+    --primary: #2dd4bf;
+    --primary-hover: #5eead4;
+    --primary-active: #99f6e4;
+    --primary-light: rgba(45, 212, 191, 0.15);
+    --primary-border: rgba(45, 212, 191, 0.3);
+    --primary-foreground: #042f2e;
+
+    /* Warm Amber for Dark Mode */
+    --accent: #f59e0b;
+    --accent-hover: #fbbf24;
+    --accent-light: rgba(245, 158, 11, 0.15);
+    --accent-border: rgba(245, 158, 11, 0.3);
+    --accent-foreground: #451a03;
+
+    /* Dark Mode Semantics */
+    --success: #4ade80;
+    --success-light: rgba(74, 222, 128, 0.15);
+    --success-border: rgba(74, 222, 128, 0.3);
+    --warning: #fbbf24;
+    --warning-light: rgba(251, 191, 36, 0.15);
+    --warning-border: rgba(251, 191, 36, 0.3);
+    --danger: #f87171;
+    --danger-light: rgba(248, 113, 113, 0.15);
+    --danger-border: rgba(248, 113, 113, 0.3);
+    --info: #38bdf8;
+    --info-light: rgba(56, 189, 248, 0.15);
+    --info-border: rgba(56, 189, 248, 0.3);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* JetBrains Mono tabular numbers for all financial values, GSTINs, code */
+  .font-tabular,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+/* Custom Scrollbar for sidebars and panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

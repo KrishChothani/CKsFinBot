@@ -7,6 +7,7 @@ const FeatureSelector = ({ feature, setFeature }) => {
   // Use the exact strings from your MongoDB enum
   const features = {
     Smart_Chat: "🤖 Smart Chat (Text + Image)",
+    Financial_Drafter: "📝 Financial Drafter",
     Document_Analysis: "📄 Document Analysis",
     Analytical_Insights: "📈 Analytical Insights",
     General_Conversation: "💬 General Conversation",

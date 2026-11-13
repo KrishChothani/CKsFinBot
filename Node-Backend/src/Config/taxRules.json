@@ -1,0 +1,103 @@
+{
+  "version": "2026.1",
+  "effectiveFrom": "2026-04-01",
+  "description": "Statutory Indian Income-tax Act and MSMED Act compliance rules for financial document automation",
+  "tdsRules": [
+    {
+      "section": "194C",
+      "title": "Payment to Contractors & Sub-contractors",
+      "singleInvoiceThreshold": 30000,
+      "aggregateAnnualThreshold": 100000,
+      "rateIndividualHuf": 0.01,
+      "rateOthers": 0.02,
+      "disallowanceSection": "40(a)(ia)",
+      "disallowancePercentage": 0.30,
+      "applicableKeywords": [
+        "contract",
+        "labour",
+        "freight",
+        "transport",
+        "advertising",
+        "catering",
+        "printing",
+        "maintenance",
+        "civil work",
+        "job work"
+      ]
+    },
+    {
+      "section": "194J",
+      "title": "Fees for Professional or Technical Services",
+      "annualThreshold": 30000,
+      "rateTechnical": 0.02,
+      "rateProfessional": 0.10,
+      "disallowanceSection": "40(a)(ia)",
+      "disallowancePercentage": 0.30,
+      "applicableKeywords": [
+        "legal",
+        "consultancy",
+        "advocate",
+        "audit",
+        "accounting",
+        "software development",
+        "technical support",
+        "advisory",
+        "architectural",
+        "medical",
+        "engineering"
+      ]
+    },
+    {
+      "section": "194I",
+      "title": "Rent on Land, Building or Equipment",
+      "annualThreshold": 240000,
+      "ratePlantMachinery": 0.02,
+      "rateLandBuilding": 0.10,
+      "disallowanceSection": "40(a)(ia)",
+      "disallowancePercentage": 0.30,
+      "applicableKeywords": [
+        "rent",
+        "office rent",
+        "warehouse rent",
+        "lease",
+        "hire charges",
+        "premises"
+      ]
+    },
+    {
+      "section": "194Q",
+      "title": "Purchase of Goods Exceeding ₹50 Lakhs",
+      "annualThreshold": 5000000,
+      "buyerTurnoverThreshold": 100000000,
+      "rate": 0.001,
+      "rateWithoutPan": 0.05,
+      "disallowanceSection": "40(a)(ia)",
+      "disallowancePercentage": 0.30,
+      "applicableKeywords": [
+        "goods",
+        "material",
+        "raw material",
+        "trading goods"
+      ]
+    }
+  ],
+  "disallowanceRules": {
+    "section40A3": {
+      "section": "Section 40A(3)",
+      "title": "Cash Payment Disallowance Exceeding ₹10,000",
+      "dailyCashLimit": 10000,
+      "goodsCarriageCashLimit": 35000,
+      "disallowancePercentage": 1.0,
+      "description": "Any expenditure paid in cash to a person in a single day exceeding ₹10,000 is 100% disallowed from taxable business income under Section 40A(3)."
+    },
+    "section43Bh": {
+      "section": "Section 43B(h)",
+      "title": "MSME Timely Payment Deduction Rule (45-Day Rule)",
+      "statutoryDaysWithoutAgreement": 15,
+      "statutoryDaysWithAgreement": 45,
+      "disallowancePercentage": 1.0,
+      "description": "Any sum payable to a Micro or Small Enterprise beyond 45 days (or 15 days without written agreement) is disallowed under Section 43B(h) and added back to taxable income if unpaid at year-end."
+    }
+  }
+}
+

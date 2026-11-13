@@ -5,20 +5,12 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AsyncHandler } from "../Utils/AsyncHandler.js";
 import { ApiError } from "../Utils/ApiError.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
-
-// Initialize S3 client
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+import { storageManager } from "../Services/Storage/StorageManager.js";
 
 /**
  * Generate presigned URL for S3 upload
- * This allows frontend to upload files directly to S3, bypassing the 10MB server limit
- * Files are stored with public-read ACL for easy access
+ * If AWS S3 is not available (e.g. running on Cloudinary fallback),
+ * informs the client to route upload via direct multipart endpoint.
  */
 const generatePresignedUrl = AsyncHandler(async (req, res) => {
   const { fileName, fileType } = req.body;
@@ -27,26 +19,42 @@ const generatePresignedUrl = AsyncHandler(async (req, res) => {
     throw new ApiError(400, "fileName and fileType are required");
   }
 
-  // Generate unique file key with timestamp to avoid conflicts
-  const timestamp = Date.now();
-  const fileKey = `documents/${timestamp}-${fileName}`;
+  // Check if AWS S3 is configured
+  if (!storageManager.s3Provider.isAvailable()) {
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          directUploadRequired: true,
+          provider: storageManager.getActiveProvider().name,
+        },
+        "AWS S3 not configured. Using direct upload via Cloudinary/StorageManager."
+      )
+    );
+  }
 
-  // Create the S3 command for PUT operation
+  // Initialize S3 client on demand
+  const s3Client = new S3Client({
+    region: process.env.AWS_REGION || "ap-south-1",
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+  });
+
+  const timestamp = Date.now();
+  const fileKey = `documents/${timestamp}-${fileName.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+
   const command = new PutObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: fileKey,
     ContentType: fileType,
-    ACL: "public-read", // Makes file publicly accessible
+    ACL: "public-read",
   });
 
   try {
-    // Generate presigned URL valid for 1 hour (3600 seconds)
-    const uploadUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 3600,
-    });
-
-    // Construct the public URL for accessing the file after upload
-    const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
+    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION || "ap-south-1"}.amazonaws.com/${fileKey}`;
 
     return res.status(200).json(
       new ApiResponse(
@@ -55,13 +63,23 @@ const generatePresignedUrl = AsyncHandler(async (req, res) => {
           uploadUrl,
           fileUrl,
           fileKey,
+          directUploadRequired: false,
         },
         "Presigned URL generated successfully"
       )
     );
-  } catch (error) {
-    console.error("Error generating presigned URL:", error);
-    throw new ApiError(500, "Failed to generate presigned URL");
+  } catch (err) {
+    console.warn("[s3.controller] Failed to generate presigned S3 URL:", err.message);
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          directUploadRequired: true,
+          provider: "cloudinary",
+        },
+        "Falling back to direct multipart upload."
+      )
+    );
   }
 });
 

@@ -2,7 +2,14 @@
 
 import mongoose from "mongoose";
 import { DB_NAME } from "../Constants.js";
+import dns from "node:dns";
 
+// Ensure reliable DNS resolution for MongoDB Atlas SRV connection strings
+try {
+  dns.setServers(["8.8.8.8", "8.8.4.4"]);
+} catch {
+  // Ignore in environments where setting DNS servers is restricted
+}
 const connectDB = async () => {
   try {
     const connectionInstance = await mongoose.connect(

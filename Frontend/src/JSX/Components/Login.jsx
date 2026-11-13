@@ -27,7 +27,27 @@ const Login = () => {
          { email, password }, // send credentials in request body
          { withCredentials: true } // correct key is withCredentials (not withcredential)
        );
-       login(res.data);
+
+       const payload = res.data?.data || res.data;
+       const userObj = payload?.user || payload;
+       const accessToken = payload?.accessToken;
+       const refreshToken = payload?.refreshToken;
+
+       if (accessToken) {
+         localStorage.setItem("accessToken", accessToken);
+       }
+       if (refreshToken) {
+         localStorage.setItem("refreshToken", refreshToken);
+       }
+       if (userObj) {
+         localStorage.setItem("user", JSON.stringify(userObj));
+         const firmId = userObj.firm?._id || userObj.firm;
+         if (firmId) {
+           localStorage.setItem("activeFirmId", firmId);
+         }
+       }
+
+       login(payload);
        console.log("Login successful", res.data);
        navigate("/app");
     } catch (err) {

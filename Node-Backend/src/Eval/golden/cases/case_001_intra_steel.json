@@ -1,0 +1,45 @@
+{
+  "caseId": "CASE-2026-001",
+  "documentType": "Purchase_Invoice",
+  "fileName": "tax_inv_bfm_0412.pdf",
+  "description": "Intra-state raw material steel purchase in Gujarat with MSME Small vendor classification.",
+  "isAnonymized": true,
+  "groundTruth": {
+    "invoiceNumber": "BFM/26/0412",
+    "invoiceDate": "2026-10-28",
+    "dueDate": "2026-12-12",
+    "supplierName": "BHARAT FORGINGS & METALS LTD",
+    "supplierGstin": "24BBBCA9876K1Z9",
+    "supplierStateCode": "24",
+    "recipientName": "Apex Steel & Alloys Pvt Ltd",
+    "recipientGstin": "24AAACA1234A1Z5",
+    "recipientStateCode": "24",
+    "placeOfSupply": "24-Gujarat",
+    "isInterState": false,
+    "isMsmeVendor": true,
+    "msmeCategory": "Small",
+    "taxableAmountPaise": 15000000,
+    "cgstPaise": 1350000,
+    "sgstPaise": 1350000,
+    "igstPaise": 0,
+    "cessPaise": 0,
+    "totalTaxPaise": 2700000,
+    "roundOffPaise": 0,
+    "grandTotalPaise": 17700000,
+    "lineItems": [
+      {
+        "description": "Hot Rolled Steel Coils Grade IS2062",
+        "hsnCode": "7208",
+        "quantity": 2.5,
+        "unit": "MT",
+        "ratePaise": 6000000,
+        "taxableAmountPaise": 15000000,
+        "gstRateBasisPoints": 1800,
+        "totalAmountPaise": 17700000,
+        "page": 1,
+        "boundingBox": [120, 310, 480, 345]
+      }
+    ]
+  }
+}
+

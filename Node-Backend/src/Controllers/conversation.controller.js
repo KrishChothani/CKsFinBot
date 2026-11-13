@@ -198,6 +198,9 @@ const generateConversationTitle = (message) => {
 
   // 6. Call the Python AI service, passing the feature mode
   let aiContent;
+  let citations = [];
+  let tokensUsed = 0;
+
   try {
     const response = await axios.post(
       `${process.env.PYTHON_SERVICE_URL}/query`,
@@ -209,6 +212,8 @@ const generateConversationTitle = (message) => {
       }
     );
     aiContent = response.data.answer;
+    citations = response.data.citations || [];
+    tokensUsed = response.data.tokens_used || 0;
   } catch (error) {
     console.error(
       "Error calling Python AI service:",
@@ -232,6 +237,9 @@ const generateConversationTitle = (message) => {
     conversation: conversationId,
     role: "assistant",
     content: aiContent,
+    citations: citations,
+    tokensUsed: tokensUsed,
+    status: "success",
   });
 
   // 8. Return the AI's message to the frontend
@@ -345,7 +353,10 @@ const updateConversationFeature = AsyncHandler(async (req, res) => {
     "Document_Analysis", 
     "Analytical_Insights",
     "Multi_Document_Search",
-    "Smart_Chat"
+    "Smart_Chat",
+    "Financial_Drafter",
+    "Document_Drafter",
+    "Legal_Drafter",
   ];
 
   if (!validFeatures.includes(featureUsed)) {
@@ -408,6 +419,98 @@ const updateConversationTitle = AsyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * @description Save user edits / versions of a drafted document
+ * @route PUT /api/v1/conversations/:conversationId/draft
+ */
+const updateDraftContent = AsyncHandler(async (req, res) => {
+  const { conversationId } = req.params;
+  const { content } = req.body;
+  const userId = req.user._id;
+
+  if (!mongoose.isValidObjectId(conversationId)) {
+    throw new ApiError(400, "Invalid conversation ID");
+  }
+
+  if (!content || content.trim() === "") {
+    throw new ApiError(400, "Draft content is required");
+  }
+
+  // Verify conversation ownership
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    user: userId,
+  });
+
+  if (!conversation) {
+    throw new ApiError(404, "Conversation not found or access denied");
+  }
+
+  // Save the updated draft as a new assistant message version
+  const draftMessage = await Message.create({
+    conversation: conversationId,
+    role: "assistant",
+    content: content.trim(),
+    status: "success",
+  });
+
+  // Update conversation's updatedAt timestamp
+  await Conversation.findByIdAndUpdate(conversationId, {
+    updatedAt: new Date(),
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, draftMessage, "Draft saved successfully")
+    );
+});
+
+/**
+ * @description Generate AI-powered suggestions to improve selected text in a financial document
+ * @route POST /api/v1/conversations/suggest-improvement
+ */
+const suggestImprovement = AsyncHandler(async (req, res) => {
+  const { selectedText, documentContext, userInstruction } = req.body;
+
+  if (!selectedText || selectedText.trim() === "") {
+    throw new ApiError(400, "Selected text is required");
+  }
+
+  if (!documentContext || documentContext.trim() === "") {
+    throw new ApiError(400, "Document context is required");
+  }
+
+  try {
+    const response = await axios.post(
+      `${process.env.PYTHON_SERVICE_URL}/suggest-improvement`,
+      {
+        selectedText: selectedText,
+        documentContext: documentContext,
+        userInstruction: userInstruction || "",
+      }
+    );
+
+    const suggestion = response.data?.suggestion;
+
+    if (!suggestion || suggestion.trim() === "") {
+      throw new ApiError(500, "Empty suggestion received from AI service.");
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, { suggestion: suggestion }, "Suggestion generated successfully")
+      );
+  } catch (error) {
+    console.error("Error calling Python AI service for suggestion:", error?.message);
+    throw new ApiError(
+      502,
+      "The AI suggestion service is currently unavailable. Please try again later."
+    );
+  }
+});
+
 export {
   getAllConversations,
   getConversationById,
@@ -416,4 +519,6 @@ export {
   deleteConversation,
   updateConversationFeature,
   updateConversationTitle,
+  updateDraftContent,
+  suggestImprovement,
 };

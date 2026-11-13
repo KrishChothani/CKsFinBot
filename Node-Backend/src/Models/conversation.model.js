@@ -29,6 +29,9 @@ const conversationSchema = new Schema(
         "Analytical_Insights", // Ratio/trend/calculation queries
         "Multi_Document_Search", // Cross-company/period comparison
         "Smart_Chat", // Unified intelligent mode
+        "Financial_Drafter", // Financial document drafting studio
+        "Document_Drafter",
+        "Legal_Drafter",
       ],
       default: "Smart_Chat",
     },

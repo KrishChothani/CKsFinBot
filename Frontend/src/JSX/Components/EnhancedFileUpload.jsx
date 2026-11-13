@@ -101,9 +101,23 @@ const EnhancedFileUpload = ({ conversationId, onUploadComplete, isLoading, setIs
 
         // Step 1: Generate presigned URL
         const urlResponse = await generatePresignedUrl(file.name, file.type);
-        console.log(urlResponse);
-        const { uploadUrl, fileUrl } = urlResponse.data.data;
-        console.log(uploadUrl, fileUrl);
+        const { uploadUrl, fileUrl, directUploadRequired } = urlResponse.data.data;
+
+        // If AWS S3 is not available, fall back to direct backend upload (handled by Cloudinary/StorageManager)
+        if (directUploadRequired || !uploadUrl) {
+          setUploadProgress(prev => ({
+            ...prev,
+            [file.name]: { status: "uploading", progress: 50 }
+          }));
+          const directRes = await uploadDocuments(conversationId, [file]);
+          results.push(...directRes.data.data);
+          setUploadProgress(prev => ({
+            ...prev,
+            [file.name]: { status: "completed", progress: 100 }
+          }));
+          continue;
+        }
+
         setUploadProgress(prev => ({
           ...prev,
           [file.name]: { status: "uploading", progress: 25 }

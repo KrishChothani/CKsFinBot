@@ -1,10 +1,7 @@
-const DEV_MODE = import.meta.env.VITE_APP_MODE;
-console.log(DEV_MODE)
-let BACKEND_URL;
+const DEV_MODE = import.meta.env.VITE_APP_MODE || "DEV";
 
-if (DEV_MODE === "DEV") {
-  BACKEND_URL = "http://localhost:3000/dev";
-} else if (DEV_MODE === "PROD") {
+let BACKEND_URL = "http://localhost:2590";
+if (DEV_MODE === "PROD") {
   BACKEND_URL = "https://5hy89vzv02.execute-api.ap-south-1.amazonaws.com/dev";
 }
 

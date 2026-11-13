@@ -3,6 +3,7 @@
 import { AsyncHandler } from "../Utils/AsyncHandler.js";
 import { ApiError } from "../Utils/ApiError.js";
 import { User } from "../Models/user.model.js";
+import { Firm } from "../Models/firm.model.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
@@ -167,20 +168,42 @@ const loginUser = AsyncHandler(async (req, res) => {
     throw new ApiError("404", "Verify your google account.");
   }
 
+  // Ensure multi-tenant firm association
+  if (!user.firm) {
+    const slugName = (user.userName || user.fullName || "firm")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-");
+    const uniqueSlug = `${slugName}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    let defaultFirm = await Firm.findOne({ email: user.email });
+    if (!defaultFirm) {
+      defaultFirm = await Firm.create({
+        name: `${user.fullName}'s Practice`,
+        slug: uniqueSlug,
+        email: user.email,
+        firmType: "CA_Firm",
+      });
+    }
+    user.firm = defaultFirm._id;
+    await user.save();
+  }
+
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
 
-  const loggedInUSer = await User.findById(user._id).select(
-    "-password -refreshToken "
-  );
+  const loggedInUSer = await User.findById(user._id)
+    .select("-password -refreshToken")
+    .populate("firm")
+    .populate("assignedClients");
 
   console.log(loggedInUSer);
 
+  const isProduction = process.env.NODE_ENV === "production";
   const options = {
     httpOnly: true,
-    secure: true,
-    sameSite: "None",
+    secure: isProduction,
+    sameSite: isProduction ? "None" : "Lax",
   };
 
   return res
@@ -213,10 +236,11 @@ const logoutUser = AsyncHandler(async (req, res) => {
     }
   );
 
+  const isProduction = process.env.NODE_ENV === "production";
   const options = {
     httpOnly: true,
-    secure: true,
-    sameSite: "None",
+    secure: isProduction,
+    sameSite: isProduction ? "None" : "Lax",
   };
 
   return res
@@ -249,10 +273,11 @@ const refreshAccessToken = AsyncHandler(async (req, res) => {
       throw new ApiError(401, "Refresh token is expired or used");
     }
 
+    const isProduction = process.env.NODE_ENV === "production";
     const options = {
       httpOnly: true,
-      secure: true,
-      sameSite: "Strict", // You might also want to add this for security
+      secure: isProduction,
+      sameSite: isProduction ? "None" : "Lax",
     };
 
     const { accessToken, newrefreshToken } =
@@ -422,8 +447,8 @@ const sendMail = async (emailId, htmlContent) => {
       port: 465,
       secure: true,
       auth: {
-        user: "krishchothani259@gmail.com",
-        pass: "dofsbprmfxdfljbe",
+        user: process.env.EMAIL_ID_FOR_VERIFICATION,
+        pass: process.env.EMAIL_PASSWORD_FOR_VERIFICATION,
       },
     });
     const receiver = {

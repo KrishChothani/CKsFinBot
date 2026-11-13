@@ -1,349 +1,326 @@
-# # app/services/llm_service.py
-# import math
-# import asyncio
-# from lib2to3.fixes.fix_input import context
-# from click import prompt
-# from langchain_google_genai import ChatGoogleGenerativeAI
-# from langchain_huggingface import HuggingFaceEmbeddings
-# from langchain_pinecone import PineconeVectorStore
-# from langchain_core.prompts import PromptTemplate
-# from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-# from langchain_core.output_parsers import StrOutputParser
-# from operator import itemgetter
-
-# from app.core.config import settings
-# from app.prompts import (
-#     SMART_CHAT_PROMPT_TEMPLATE,
-#     DOCUMENT_ANALYSIS_PROMPT_TEMPLATE,
-#     ANALYTICAL_INSIGHTS_PROMPT_TEMPLATE,
-#     GENERAL_CONVERSATION_PROMPT_TEMPLATE
-# )
-
-# from .pinecone_service import get_pinecone_client
-
-# def format_docs(docs: list) -> str:
-#     """Helper function to format retrieved documents into a single string."""
-#     return "\n---\n".join([doc.page_content for doc in docs])
-
-# def format_chat_history(chat_history: list) -> str:
-#     """Formats chat history into a readable string."""
-#     if not chat_history:
-#         return "No previous conversation."
-#     return "\n".join([f"{msg.get('role', 'unknown').capitalize()}: {msg.get('content', '')}" for msg in chat_history])
-
-# # --- RAG Pipeline Implementations using LCEL ---
-# # async def retrieve_from_multiple_namespaces(embeddings, question: str, namespaces: list):
-# #     """
-# #     Creates a retriever for each namespace, searches them concurrently,
-# #     and returns a combined list of relevant documents.
-# #     """
-# #     if not namespaces:
-# #         return []
-
-# #     # Create a list of retrieval tasks
-# #     tasks = []
-# #     for ns in namespaces:
-# #         try:
-# #             vectorstore = PineconeVectorStore(index_name="cksfinbot", embedding=embeddings, namespace=ns)
-# #             retriever = vectorstore.as_retriever(search_kwargs={"k": 50}) # Get top 5 from each doc
-# #             # Add the async retrieval task to the list
-# #             tasks.append(retriever.ainvoke(question))
-# #         except Exception as e:
-# #             print(f"Warning: Could not create retriever for namespace {ns}. Skipping. Error: {e}")
-
-# #     # Run all retrieval tasks concurrently
-# #     all_docs_nested = await asyncio.gather(*tasks)
-    
-# #     # Flatten the list of lists into a single list of documents
-# #     combined_docs = [doc for sublist in all_docs_nested for doc in sublist]
-    
-# #     # Optional: You could add a re-ranking step here to find the best docs from the combined list.
-# #     # For now, we'll just return the combined list.
-# #     return combined_docs
-
-# async def retrieve_from_multiple_namespaces(embeddings, question: str, namespaces: list):
-#     """
-#     Dynamically determines search 'k' by using the existing get_pinecone_client() helper
-#     to get namespace stats, then runs retrievals concurrently.
-#     """
-#     if not namespaces:
-#         return []
-
-#     namespace_stats = {}
-#     try:
-#         # Step 1: Use your existing helper function to get a Pinecone client.
-#         print("📊 Fetching index stats from Pinecone using the client helper...")
-#         pinecone_client = get_pinecone_client()
-#         pinecone_index = pinecone_client.Index("cksfinbot")
-        
-#         # Now, use this client to get the stats.
-#         stats = pinecone_index.describe_index_stats()
-#         namespace_stats = stats.get('namespaces', {})
-#         print("✅ Successfully fetched index stats.")
-
-#     except Exception as e:
-#         print(f"❌ Error fetching Pinecone stats: {e}. Falling back to a fixed k=10 for all retrievals.")
-#         # namespace_stats will remain an empty dict, triggering the fallback logic below.
-
-#     # The rest of the function remains the same, as its logic is correct.
-#     tasks = []
-#     for ns in namespaces:
-#         try:
-#             chunk_count = namespace_stats.get(ns, {}).get('vector_count', 0)
-            
-#             if chunk_count > 0:
-#                 # Heuristic for calculating 'k'.
-#                 k = math.ceil(chunk_count * 0.15)
-#                 # dynamic_k = max(5, min(k, 50))
-#                 dynamic_k = max(5, k)
-#                 print(f"🔍 Retrieving from '{ns}' with dynamic k={dynamic_k} (based on {chunk_count} chunks)")
-#             else:
-#                 # Fallback if stats call failed or the namespace is new/empty.
-#                 print(f"⚠️  Could not find stats for namespace '{ns}'. Using default k=10.")
-#                 dynamic_k = 10
-
-#             # Here we use LangChain's PineconeVectorStore for retrieval, as it's designed for this.
-#             vectorstore = PineconeVectorStore(
-#                 index_name="cksfinbot", 
-#                 embedding=embeddings, 
-#                 namespace=ns
-#             )
-#             retriever = vectorstore.as_retriever(
-#                 search_kwargs={"k": dynamic_k} # <-- The dynamic value is used here
-#             )
-            
-#             tasks.append(retriever.ainvoke(question))
-            
-#         except Exception as e:
-#             print(f"Warning: Could not create retriever for namespace {ns}. Skipping. Error: {e}")
-
-#     if not tasks:
-#         print("No valid retrieval tasks could be created.")
-#         return []
-        
-#     all_docs_nested = await asyncio.gather(*tasks)
-    
-#     combined_docs = [doc for sublist in all_docs_nested for doc in sublist]
-#     print(f"Retrieved a total of {len(combined_docs)} documents from {len(namespaces)} namespaces.")
-    
-#     return combined_docs
-
-# async def smart_chat_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list):
-#     """The RAG pipeline for the multi-modal Smart Chat feature, built with LCEL."""
-#     print("Executing Smart Chat Pipeline with LCEL")
-#     if not namespaces:
-#         return "I can't answer this question without any documents to analyze. Please upload a document first."
-    
-#     relevant_docs = await retrieve_from_multiple_namespaces(embeddings, question, namespaces)
-#     if not relevant_docs:
-#         return "I couldn't find any relevant information in the uploaded documents to answer your question."
-        
-#     context = format_docs(relevant_docs)
-
-#     prompt = PromptTemplate.from_template(SMART_CHAT_PROMPT_TEMPLATE)
-
-#     # 3. Build the LCEL RAG Chain
-#     # This chain defines the precise flow of data.
-#     rag_chain = (
-#         {
-#             "context": lambda _: context,
-#             "question": itemgetter("question"),
-#             "chat_history": itemgetter("chat_history"),
-#         }
-#         | prompt
-#         | llm
-#         | StrOutputParser()
-#     )
-#     # 4. Invoke the chain with the required inputs
-#     return rag_chain.invoke({"question": question, "chat_history": chat_history})
-
-# # --- Placeholder Pipelines (can be easily built out using the same LCEL pattern) ---
-# async def document_analysis_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list):
-#     print("Executing Document Analysis Pipeline")
-#     # Example: you could change the retriever settings or use a different prompt
-#     # retriever = vectorstore.as_retriever(search_type="mmr", search_kwargs={"k": 7})
-#     # prompt = PromptTemplate.from_template(DOCUMENT_ANALYSIS_PROMPT_TEMPLATE)
-#     # ... build chain ...
-#     return "The Document Analysis feature is under development. Please try the Smart Chat for now."
-
-# async def analytical_insights_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list):
-#     print("Executing Analytical Insights Pipeline")
-#     return "The Analytical Insights feature is under development. Please try the Smart Chat for now."
-
-# async def general_conversation_pipeline(llm, question: str, chat_history: str):
-#     """A simple conversational chain without document retrieval, built with LCEL."""
-#     print("Executing General Conversation Pipeline with LCEL")
-    
-#     prompt = PromptTemplate.from_template(GENERAL_CONVERSATION_PROMPT_TEMPLATE)
-    
-#     # Simple chain: prompt -> llm -> output parser
-#     conversation_chain = prompt | llm | StrOutputParser()
-    
-#     return conversation_chain.invoke({"question": question, "chat_history": chat_history})
-
-
-# # --- The Main Router Function (Entry Point) ---
-# async def get_answer_from_rag(question: str, chat_history: list, pinecone_namespaces: list, feature_mode: str) -> str:
-#     """
-#     Initializes models and routes the request to the correct RAG pipeline.
-#     """
-#     # Initialize models once per request
-#     llm = ChatGoogleGenerativeAI(
-#         model="gemini-2.5-flash-lite", 
-#         temperature=0, 
-#         google_api_key=settings.GOOGLE_API_KEY, 
-#         convert_system_message_to_human=True
-#     )
-#     embeddings = HuggingFaceEmbeddings(
-#         model_name='sentence-transformers/all-MiniLM-L6-v2',
-#         model_kwargs={'device': 'cpu'},
-#         encode_kwargs={'normalize_embeddings': True}
-#     )
-#     print("Models initialized." , embeddings)
-    
-#     # Format chat history once
-#     formatted_history = format_chat_history(chat_history)
-
-#     # Router logic to select and execute the correct pipeline
-#     if feature_mode == "Smart_Chat":
-#         return await smart_chat_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
-    
-#     elif feature_mode == "Document_Analysis":
-#         return document_analysis_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
-        
-#     elif feature_mode == "Analytical_Insights":
-#         return analytical_insights_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
-        
-#     elif feature_mode == "General_Conversation":
-#         return general_conversation_pipeline(llm, question, formatted_history)
-        
-#     else: # Fallback to the default Smart Chat mode
-#         print(f"Unknown feature mode '{feature_mode}', defaulting to Smart_Chat.")
-#         return smart_chat_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
-
 # app/services/llm_service.py
 import math
+import re
+import json
 import asyncio
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_pinecone import PineconeVectorStore
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
 from operator import itemgetter
+from typing import List, Dict, Any, Tuple, Optional
+
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
+from langchain_pinecone import PineconeVectorStore
 
 from app.core.config import settings
+from app.core.model_loader import llm_model, embedding_model
+from .pinecone_service import get_pinecone_client
 from app.prompts import (
     SMART_CHAT_PROMPT_TEMPLATE,
     DOCUMENT_ANALYSIS_PROMPT_TEMPLATE,
     ANALYTICAL_INSIGHTS_PROMPT_TEMPLATE,
-    GENERAL_CONVERSATION_PROMPT_TEMPLATE
+    GENERAL_CONVERSATION_PROMPT_TEMPLATE,
+    FINANCIAL_DOCUMENT_DRAFTING_PROMPT_TEMPLATE,
+    FINANCIAL_DRAFTER_SUGGESTION_PROMPT_TEMPLATE,
+    HYDE_FINANCIAL_PROMPT,
+    LEGAL_CONTRACT_DRAFTING_PROMPT_TEMPLATE,
+    LEGAL_DRAFTER_SUGGESTION_PROMPT_TEMPLATE,
 )
 
-from .pinecone_service import get_pinecone_client
-from app.core.model_loader import llm_model, embedding_model
 
+# ─── Token Utilities ──────────────────────────────────────────────────────────
+
+def _estimate_tokens_from_text(text: str) -> int:
+    """Rough conservative estimate: 1 token ≈ 4 characters."""
+    return max(0, len(text) // 4)
+
+
+def _extract_token_count(response) -> int:
+    """Extracts actual token count if available from Gemini / LangChain response metadata."""
+    try:
+        meta = getattr(response, "usage_metadata", None)
+        if meta:
+            if isinstance(meta, dict):
+                return int(meta.get("total_token_count", 0) or 
+                           (meta.get("input_tokens", 0) + meta.get("output_tokens", 0)))
+            total = getattr(meta, "total_token_count", 0)
+            return int(total) if total else 0
+    except Exception:
+        pass
+    return 0
+
+
+# ─── Citation & Context Formatting ───────────────────────────────────────────
 
 def format_docs(docs: list) -> str:
+    """Format retrieved documents into a plain string without citation markers."""
     if not docs:
         return "No relevant documents found."
     return "\n---\n".join([doc.page_content for doc in docs])
 
-def format_chat_history(chat_history: list) -> str:
- 
+
+def format_docs_with_citations(docs: list) -> Tuple[str, dict]:
+    """
+    Labels each chunk [Source S1], [Source S2], ... so the LLM can cite accurately.
+    Returns:
+        (formatted_context: str, source_map: dict)
+    """
+    if not docs:
+        return "No financial documents have been uploaded or referenced.", {}
+
+    context_lines = []
+    source_map = {}
+
+    for i, doc in enumerate(docs, start=1):
+        source_id = f"S{i}"
+        meta = getattr(doc, "metadata", {}) or {}
+        doc_id = meta.get("document_id") or meta.get("documentId") or ""
+        file_name = meta.get("fileName") or meta.get("file_name") or meta.get("source_filename") or f"Document {i}"
+        page_num = meta.get("page") or meta.get("page_number") or 1
+        raw_bboxes = meta.get("bboxes", "[]")
+        raw_span = meta.get("page_span", "[]")
+
+        try:
+            bboxes = json.loads(raw_bboxes) if isinstance(raw_bboxes, str) else (raw_bboxes or [])
+        except Exception:
+            bboxes = []
+
+        try:
+            page_span = json.loads(raw_span) if isinstance(raw_span, str) else (raw_span or [page_num])
+        except Exception:
+            page_span = [page_num]
+
+        source_map[source_id] = {
+            "documentId": str(doc_id) if doc_id else None,
+            "fileName": file_name,
+            "pageNumber": page_num,
+            "pageSpan": page_span,
+            "bboxes": bboxes,
+            "chunkText": doc.page_content,
+        }
+
+        context_lines.append(
+            f"[Source {source_id}]\n"
+            f"Document: {file_name} (Page {page_num})\n"
+            f"Content: {doc.page_content}\n"
+        )
+
+    return "\n---\n".join(context_lines), source_map
+
+
+def parse_and_validate_citations(llm_text: str, source_map: dict) -> Tuple[str, list]:
+    """
+    Finds citation tags in the LLM response (supports [S1], [Source S1], [Source 1], [1]),
+    replaces them with standard inline numbered citations [1], [2], and returns a structured list.
+    """
+    if not source_map:
+        return llm_text, []
+
+    matches = list(re.finditer(r"\[(?:Source\s+)?(?:S)?(\d+)\]", llm_text))
+
+    citations = []
+    tag_to_index = {}
+    clean_text = llm_text
+    seen = set()
+
+    for m in matches:
+        full_match = m.group(0)
+        tag_num = m.group(1)
+        src_key = f"S{tag_num}"
+
+        if src_key not in source_map:
+            continue
+
+        if tag_num not in seen:
+            seen.add(tag_num)
+            new_idx = len(citations) + 1
+            tag_to_index[src_key] = new_idx
+            src = source_map[src_key]
+            citations.append({
+                "index": new_idx,
+                "citationType": "document",
+                "title": src["fileName"],
+                "url": "",
+                "documentId": src["documentId"],
+                "fileName": src["fileName"],
+                "pageNumber": src["pageNumber"],
+                "pageSpan": src["pageSpan"],
+                "snippet": src["chunkText"][:300],
+                "bboxes": src["bboxes"],
+                "confidenceScore": 1.0,
+            })
+
+    for m in matches:
+        full_match = m.group(0)
+        tag_num = m.group(1)
+        src_key = f"S{tag_num}"
+        if src_key in tag_to_index:
+            new_idx = tag_to_index[src_key]
+            clean_text = clean_text.replace(full_match, f"[{new_idx}]")
+
+    # If no inline tags were placed by the LLM, but documents were retrieved and used, provide document citations
+    if not citations and source_map:
+        seen_docs = set()
+        for src_key, src in source_map.items():
+            doc_id = src.get("documentId")
+            if doc_id and doc_id in seen_docs:
+                continue
+            if doc_id:
+                seen_docs.add(doc_id)
+            new_idx = len(citations) + 1
+            citations.append({
+                "index": new_idx,
+                "citationType": "document",
+                "title": src["fileName"],
+                "url": "",
+                "documentId": src["documentId"],
+                "fileName": src["fileName"],
+                "pageNumber": src["pageNumber"],
+                "pageSpan": src["pageSpan"],
+                "snippet": src["chunkText"][:300],
+                "bboxes": src["bboxes"],
+                "confidenceScore": 1.0,
+            })
+
+    return clean_text, citations
+
+
+def format_chat_history(chat_history) -> str:
+    """Formats chat history into a readable string."""
+    if isinstance(chat_history, str):
+        return chat_history
     if not chat_history:
         return "No previous conversation."
-    return "\n".join([f"{msg.get('role', 'unknown').capitalize()}: {msg.get('content', '')}" for msg in chat_history])
+    return "\n".join([
+        f"{msg.get('role', 'unknown').capitalize()}: {msg.get('content', '')}"
+        for msg in chat_history if isinstance(msg, dict)
+    ])
 
-async def retrieve_from_multiple_namespaces(embeddings, question: str, namespaces: list):
-   
+
+# ─── HyDE: Hypothetical Document Embeddings ───────────────────────────────────
+
+async def generate_financial_hypothesis(query: str, llm) -> str:
+    """
+    HyDE: Generates a short hypothetical financial disclosure or filing passage for the query.
+    Embeddings in "answer space" significantly improve Pinecone retrieval recall.
+    """
+    try:
+        prompt = PromptTemplate.from_template(HYDE_FINANCIAL_PROMPT)
+        chain = prompt | llm | StrOutputParser()
+        hypothesis = (await chain.ainvoke({"query": query})).strip()
+        if hypothesis:
+            print(f"💡 HyDE financial hypothesis generated ({len(hypothesis.split())} words).")
+            return hypothesis
+    except Exception as e:
+        print(f"⚠️  HyDE generation failed: {e}. Falling back to plain query.")
+    return query
+
+
+# ─── Multi-Namespace Vector Retrieval ─────────────────────────────────────────
+
+async def retrieve_from_multiple_namespaces(embeddings, question: str, namespaces: list) -> list:
+    """
+    Dynamically determines search 'k' based on namespace stats and retrieves chunks concurrently.
+    """
     if not namespaces:
         print("⚠️  No namespaces provided for retrieval.")
         return []
 
     namespace_stats = {}
     try:
-        print("📊 Fetching index stats from Pinecone using the client helper...")
+        print("📊 Fetching index stats from Pinecone...")
         pinecone_client = get_pinecone_client()
         pinecone_index = pinecone_client.Index("cksfinbot")
-        
         stats = pinecone_index.describe_index_stats()
         namespace_stats = stats.get('namespaces', {})
-        print("✅ Successfully fetched index stats.")
-
+        print("✅ Successfully fetched Pinecone stats.")
     except Exception as e:
-        print(f"❌ Error fetching Pinecone stats: {e}. Falling back to a fixed k=10 for all retrievals.")
+        print(f"❌ Error fetching Pinecone stats: {e}. Falling back to default k=10.")
 
     tasks = []
     for ns in namespaces:
         try:
             chunk_count = namespace_stats.get(ns, {}).get('vector_count', 0)
-            
             if chunk_count > 0:
                 k = math.ceil(chunk_count * 0.15)
-                dynamic_k = max(5, k)
-                print(f"🔍 Retrieving from '{ns}' with dynamic k={dynamic_k} (based on {chunk_count} chunks)")
+                dynamic_k = max(5, min(k, 40))
+                print(f"🔍 Retrieving from '{ns}' with dynamic k={dynamic_k} (out of {chunk_count} vectors)")
             else:
-                print(f"⚠️  Namespace '{ns}' is empty or doesn't exist. Skipping retrieval.")
-                continue  # Skip empty namespaces
+                dynamic_k = 10
 
             vectorstore = PineconeVectorStore(
-                index_name="cksfinbot", 
-                embedding=embeddings, 
+                index_name="cksfinbot",
+                embedding=embeddings,
                 namespace=ns
             )
             retriever = vectorstore.as_retriever(
                 search_kwargs={"k": dynamic_k}
             )
-            
             tasks.append(retriever.ainvoke(question))
-            
         except Exception as e:
-            print(f"⚠️  Warning: Could not create retriever for namespace {ns}. Skipping. Error: {e}")
+            print(f"⚠️  Warning: Could not create retriever for namespace {ns}: {e}")
 
     if not tasks:
-        print("⚠️  No valid retrieval tasks could be created. Returning empty results.")
         return []
-        
+
     all_docs_nested = await asyncio.gather(*tasks, return_exceptions=True)
-    
-    # Filter out any exceptions that occurred during retrieval
     combined_docs = []
     for result in all_docs_nested:
         if isinstance(result, Exception):
             print(f"⚠️  Retrieval error: {result}")
         else:
             combined_docs.extend(result)
-    
-    print(f"✅ Retrieved a total of {len(combined_docs)} documents from {len(namespaces)} namespaces.")
-    
+
+    print(f"✅ Retrieved a total of {len(combined_docs)} document chunks from {len(namespaces)} namespaces.")
     return combined_docs
 
-async def smart_chat_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list):
+
+async def hyde_retrieve_from_namespaces(llm, embeddings, query: str, namespaces: list) -> list:
     """
-    The RAG pipeline for the multi-modal Smart Chat feature, built with LCEL.
-    Always sends query to LLM even if no documents are found, allowing the prompt
-    to handle general queries and missing context scenarios.
+    Dual HyDE retrieval: Searches with both hypothetical answer and actual query, then merges & deduplicates.
     """
-    print("🚀 Executing Smart Chat Pipeline with LCEL")
-    
-    # Try to retrieve documents, but don't block if none exist
+    if not namespaces:
+        return []
+
+    # Step 1: Generate hypothesis
+    hypothesis = await generate_financial_hypothesis(query, llm)
+
+    # Step 2: Retrieve both in parallel
+    hyde_docs, query_docs = await asyncio.gather(
+        retrieve_from_multiple_namespaces(embeddings, hypothesis, namespaces),
+        retrieve_from_multiple_namespaces(embeddings, query, namespaces),
+    )
+
+    # Step 3: Deduplicate chunks preserving order (hypothesis first)
+    seen_hashes = set()
+    merged = []
+    for doc in hyde_docs + query_docs:
+        content_hash = hash(doc.page_content[:200])
+        if content_hash not in seen_hashes:
+            seen_hashes.add(content_hash)
+            merged.append(doc)
+
+    print(f"🔬 HyDE: {len(hyde_docs)} hypothesis-docs + {len(query_docs)} query-docs → {len(merged)} unique chunks.")
+    return merged
+
+
+# ─── Pipelines ────────────────────────────────────────────────────────────────
+
+async def smart_chat_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list) -> dict:
+    """
+    Smart Chat Pipeline: Multi-modal RAG with HyDE, structured citation parsing, and token tracking.
+    """
+    print("🚀 Executing Smart Chat Pipeline with HyDE & Citations")
+
     relevant_docs = []
     if namespaces:
-        relevant_docs = await retrieve_from_multiple_namespaces(embeddings, question, namespaces)
-    else:
-        print("⚠️  No namespaces provided. Proceeding with empty context.")
-    
-    # Format context (will be empty string or "No relevant documents found" if no docs)
-    context = format_docs(relevant_docs) if relevant_docs else "No financial documents have been uploaded yet."
+        relevant_docs = await hyde_retrieve_from_namespaces(llm, embeddings, question, namespaces)
 
-    # Create prompt template
+    doc_context, source_map = format_docs_with_citations(relevant_docs)
+
     prompt = PromptTemplate.from_template(SMART_CHAT_PROMPT_TEMPLATE)
-
-    # Build the LCEL RAG Chain - ALWAYS executes, even with empty context
     rag_chain = (
         {
-            "context": lambda _: context,
+            "context": lambda _: doc_context,
             "question": itemgetter("question"),
             "chat_history": itemgetter("chat_history"),
         }
@@ -351,29 +328,114 @@ async def smart_chat_pipeline(llm, embeddings, question: str, chat_history: str,
         | llm
         | StrOutputParser()
     )
-    
-    # Invoke the chain with the required inputs
-    print("📤 Sending query to Gemini...")
-    response = await rag_chain.ainvoke({"question": question, "chat_history": chat_history})
+
+    print("📤 Sending Smart Chat query to Gemini...")
+    raw_response = await rag_chain.ainvoke({"question": question, "chat_history": chat_history})
     print("✅ Response received from Gemini")
-    return response
 
-async def document_analysis_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list):
-    """Document Analysis Pipeline - Currently under development."""
+    clean_answer, citations = parse_and_validate_citations(raw_response, source_map)
+
+    # Calculate tokens
+    input_tokens = _estimate_tokens_from_text(doc_context + question + chat_history)
+    output_tokens = _estimate_tokens_from_text(raw_response)
+    tokens_used = input_tokens + output_tokens
+
+    return {
+        "answer": clean_answer,
+        "citations": citations,
+        "tokens_used": tokens_used
+    }
+
+
+async def financial_drafter_pipeline(llm, embeddings, instruction: str, chat_history: str, namespaces: list) -> dict:
+    """
+    Financial Document Drafter Pipeline:
+    Drafts comprehensive, audit-ready financial documents, models, and reports grounded in uploaded financial context.
+    """
+    print("✍️  Executing Financial Document Drafter Pipeline")
+
+    relevant_docs = []
+    if namespaces:
+        relevant_docs = await hyde_retrieve_from_namespaces(llm, embeddings, instruction, namespaces)
+
+    doc_context, source_map = format_docs_with_citations(relevant_docs)
+
+    prompt = PromptTemplate.from_template(FINANCIAL_DOCUMENT_DRAFTING_PROMPT_TEMPLATE)
+    rag_chain = (
+        {
+            "context": lambda _: doc_context,
+            "question": itemgetter("instruction"),
+            "chat_history": lambda _: chat_history,
+        }
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    print("📤 Sending drafting instruction to Gemini...")
+    raw_draft = await rag_chain.ainvoke({
+        "instruction": instruction,
+        "chat_history": chat_history
+    })
+    print("✅ Financial document drafted successfully")
+
+    clean_draft, citations = parse_and_validate_citations(raw_draft, source_map)
+
+    input_tokens = _estimate_tokens_from_text(doc_context + instruction + chat_history)
+    output_tokens = _estimate_tokens_from_text(raw_draft)
+    tokens_used = input_tokens + output_tokens
+
+    return {
+        "answer": clean_draft,
+        "citations": citations,
+        "tokens_used": tokens_used
+    }
+
+
+async def financial_drafter_suggestion_pipeline(selected_text: str, document_context: str, user_instruction: str = "") -> str:
+    """
+    Financial Drafter Suggestion Pipeline:
+    Improves highlighted / selected text in the drafting studio with CFO-grade polish and accuracy.
+    """
+    print("✨ Executing Financial Drafter Suggestion Pipeline")
+    llm = llm_model
+    if not user_instruction:
+        user_instruction = "Improve this financial text for clarity, professional CFO-level tone, and numerical precision."
+
+    prompt = PromptTemplate.from_template(FINANCIAL_DRAFTER_SUGGESTION_PROMPT_TEMPLATE)
+    chain = (
+        {
+            "selected_text": itemgetter("selected_text"),
+            "document_context": itemgetter("document_context"),
+            "user_instruction": itemgetter("user_instruction"),
+        }
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    print("📤 Sending text selection to Gemini for improvement...")
+    response = await chain.ainvoke({
+        "selected_text": selected_text,
+        "document_context": document_context,
+        "user_instruction": user_instruction
+    })
+    print("✅ Financial suggestion generated successfully")
+    return response.strip()
+
+
+async def document_analysis_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list) -> dict:
+    """Document Analysis Pipeline."""
     print("🚀 Executing Document Analysis Pipeline")
-    
-    # Similar structure - always send to LLM
     relevant_docs = []
     if namespaces:
         relevant_docs = await retrieve_from_multiple_namespaces(embeddings, question, namespaces)
-    
-    context = format_docs(relevant_docs) if relevant_docs else "No financial documents have been uploaded yet."
-    
+
+    doc_context, source_map = format_docs_with_citations(relevant_docs)
     prompt = PromptTemplate.from_template(DOCUMENT_ANALYSIS_PROMPT_TEMPLATE)
-    
     chain = (
         {
-            "context": lambda _: context,
+            "context": lambda _: doc_context,
             "question": itemgetter("question"),
             "chat_history": itemgetter("chat_history"),
         }
@@ -381,25 +443,29 @@ async def document_analysis_pipeline(llm, embeddings, question: str, chat_histor
         | llm
         | StrOutputParser()
     )
-    
-    return await chain.ainvoke({"question": question, "chat_history": chat_history})
+    raw_answer = await chain.ainvoke({"question": question, "chat_history": chat_history})
+    clean_answer, citations = parse_and_validate_citations(raw_answer, source_map)
+    tokens_used = _estimate_tokens_from_text(doc_context + question + chat_history + raw_answer)
 
-async def analytical_insights_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list):
-    """Analytical Insights Pipeline - Currently under development."""
+    return {
+        "answer": clean_answer,
+        "citations": citations,
+        "tokens_used": tokens_used
+    }
+
+
+async def analytical_insights_pipeline(llm, embeddings, question: str, chat_history: str, namespaces: list) -> dict:
+    """Analytical Insights Pipeline."""
     print("🚀 Executing Analytical Insights Pipeline")
-    
-    # Similar structure - always send to LLM
     relevant_docs = []
     if namespaces:
-        relevant_docs = await retrieve_from_multiple_namespaces(embeddings, question, namespaces)
-    
-    context = format_docs(relevant_docs) if relevant_docs else "No financial documents have been uploaded yet."
-    
+        relevant_docs = await hyde_retrieve_from_namespaces(llm, embeddings, question, namespaces)
+
+    doc_context, source_map = format_docs_with_citations(relevant_docs)
     prompt = PromptTemplate.from_template(ANALYTICAL_INSIGHTS_PROMPT_TEMPLATE)
-    
     chain = (
         {
-            "context": lambda _: context,
+            "context": lambda _: doc_context,
             "question": itemgetter("question"),
             "chat_history": itemgetter("chat_history"),
         }
@@ -407,44 +473,61 @@ async def analytical_insights_pipeline(llm, embeddings, question: str, chat_hist
         | llm
         | StrOutputParser()
     )
-    
-    return await chain.ainvoke({"question": question, "chat_history": chat_history})
+    raw_answer = await chain.ainvoke({"question": question, "chat_history": chat_history})
+    clean_answer, citations = parse_and_validate_citations(raw_answer, source_map)
+    tokens_used = _estimate_tokens_from_text(doc_context + question + chat_history + raw_answer)
 
-async def general_conversation_pipeline(llm, question: str, chat_history: str):
+    return {
+        "answer": clean_answer,
+        "citations": citations,
+        "tokens_used": tokens_used
+    }
+
+
+async def general_conversation_pipeline(llm, question: str, chat_history: str) -> dict:
+    """General Conversation Pipeline without vector retrieval."""
     print("🚀 Executing General Conversation Pipeline with LCEL")
-    
     prompt = PromptTemplate.from_template(GENERAL_CONVERSATION_PROMPT_TEMPLATE)
-    
     conversation_chain = prompt | llm | StrOutputParser()
-    
-    return await conversation_chain.ainvoke({"question": question, "chat_history": chat_history})
+    response = await conversation_chain.ainvoke({"question": question, "chat_history": chat_history})
+    tokens_used = _estimate_tokens_from_text(question + chat_history + response)
+
+    return {
+        "answer": response,
+        "citations": [],
+        "tokens_used": tokens_used
+    }
 
 
+# ─── Main Router Entry Point ──────────────────────────────────────────────────
 
-async def get_answer_from_rag(question: str, chat_history: list, pinecone_namespaces: list, feature_mode: str) -> str:
+async def get_answer_from_rag(question: str, chat_history: list, pinecone_namespaces: list, feature_mode: str) -> dict:
+    """
+    Main entry point for RAG queries. Routes to the appropriate pipeline and returns
+    a dictionary containing answer, citations, and tokens_used.
+    """
     print(f"🎯 Router: Processing query with feature_mode='{feature_mode}'")
-    
-    # Use global models
     llm = llm_model
     embeddings = embedding_model
-    print("✅ Global Models used.")
-    
-    # Format chat history once
     formatted_history = format_chat_history(chat_history)
 
-    # Router logic to select and execute the correct pipeline
-    if feature_mode == "Smart_Chat":
-        return await smart_chat_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
-    
+    if feature_mode in ["Financial_Drafter", "Legal_Drafter", "Document_Drafter"]:
+        return await financial_drafter_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
+
     elif feature_mode == "Document_Analysis":
         return await document_analysis_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
-        
+
     elif feature_mode == "Analytical_Insights":
         return await analytical_insights_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
-        
+
     elif feature_mode == "General_Conversation":
         return await general_conversation_pipeline(llm, question, formatted_history)
-        
-    else:  # Fallback to the default Smart Chat mode
-        print(f"⚠️  Unknown feature mode '{feature_mode}', defaulting to Smart_Chat.")
+
+    else:
+        # Default to Smart Chat
         return await smart_chat_pipeline(llm, embeddings, question, formatted_history, pinecone_namespaces)
+
+
+# Aliases for MatterAssist compatibility
+legal_drafter_pipeline = financial_drafter_pipeline
+legal_drafter_suggestion_pipeline = financial_drafter_suggestion_pipeline

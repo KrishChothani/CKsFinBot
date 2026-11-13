@@ -6,6 +6,23 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new Schema(
   {
+    firm: {
+      type: Schema.Types.ObjectId,
+      ref: "Firm",
+      index: true,
+    },
+    role: {
+      type: String,
+      enum: ["Firm_Admin", "CA", "Accountant", "Client_User", "Viewer"],
+      default: "Firm_Admin",
+      index: true,
+    },
+    assignedClients: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Client",
+      },
+    ],
     userName: {
       type: String,
       required: true,
@@ -20,6 +37,7 @@ const userSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
     },
     fullName: {
       type: String,
@@ -31,9 +49,17 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Password is required"],
     },
+    phone: {
+      type: String,
+      trim: true,
+    },
     verified: {
       type: Boolean,
       default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     refreshToken: {
       type: String,
@@ -47,8 +73,6 @@ const userSchema = new Schema(
   },
   { timestamps: true }
 );
-
-// ... (the rest of your user model remains exactly the same)
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
@@ -67,13 +91,16 @@ userSchema.methods.generateAccessToken = async function () {
       email: this.email,
       userName: this.userName,
       fullName: this.fullName,
+      firm: this.firm,
+      role: this.role,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1d",
     }
   );
 };
+
 userSchema.methods.generateREfreshToken = async function () {
   return jwt.sign(
     {
@@ -81,8 +108,9 @@ userSchema.methods.generateREfreshToken = async function () {
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "10d",
     }
   );
 };
+
 export const User = mongoose.model("User", userSchema);

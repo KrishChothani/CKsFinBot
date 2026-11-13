@@ -1,0 +1,45 @@
+{
+  "caseId": "CASE-2026-002",
+  "documentType": "Purchase_Invoice",
+  "fileName": "inv_pune_precision_881.pdf",
+  "description": "Inter-state machinery spare parts purchase from Maharashtra to Gujarat (IGST 18%).",
+  "isAnonymized": true,
+  "groundTruth": {
+    "invoiceNumber": "PPT/26-27/0881",
+    "invoiceDate": "2026-10-25",
+    "dueDate": "2026-11-25",
+    "supplierName": "PUNE PRECISION TOOLS PVT LTD",
+    "supplierGstin": "27AABCP1122D1Z4",
+    "supplierStateCode": "27",
+    "recipientName": "Apex Steel & Alloys Pvt Ltd",
+    "recipientGstin": "24AAACA1234A1Z5",
+    "recipientStateCode": "24",
+    "placeOfSupply": "24-Gujarat",
+    "isInterState": true,
+    "isMsmeVendor": false,
+    "msmeCategory": null,
+    "taxableAmountPaise": 8500000,
+    "cgstPaise": 0,
+    "sgstPaise": 0,
+    "igstPaise": 1530000,
+    "cessPaise": 0,
+    "totalTaxPaise": 1530000,
+    "roundOffPaise": 0,
+    "grandTotalPaise": 10030000,
+    "lineItems": [
+      {
+        "description": "Carbide CNC Cutting Tool Inserts",
+        "hsnCode": "8207",
+        "quantity": 10,
+        "unit": "SET",
+        "ratePaise": 850000,
+        "taxableAmountPaise": 8500000,
+        "gstRateBasisPoints": 1800,
+        "totalAmountPaise": 10030000,
+        "page": 1,
+        "boundingBox": [115, 290, 490, 320]
+      }
+    ]
+  }
+}
+

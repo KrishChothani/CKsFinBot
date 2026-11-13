@@ -9,7 +9,7 @@ import { handleNewChatMessage } from "./Controllers/chat.controller.js"; // Assu
 
 dotenv.config({ path: "./.env" });
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT;
 const httpServer = http.createServer(app);
 
 const io = new Server(httpServer, {

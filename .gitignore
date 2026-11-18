@@ -1,1 +1,184 @@
-.venv
+# -----------------------------------------------------------------------------
+# CKsFinBot — Root .gitignore
+# Multi-Tier Fintech Monorepo: Node.js (Express), Python (FastAPI), React 19 (Vite)
+# -----------------------------------------------------------------------------
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 1. ENVIRONMENT VARIABLES & SECRETS (CRITICAL: DO NOT COMMIT REAL CREDENTIALS)
+# ═════════════════════════════════════════════════════════════════════════════
+.env
+.env.*
+!.env.example
+!.env.template
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+credentials.json
+client_secret*.json
+serviceAccountKey*.json
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 2. NODE.JS & JAVASCRIPT PACKAGES
+# ═════════════════════════════════════════════════════════════════════════════
+node_modules/
+jspm_packages/
+.npm
+.eslintcache
+.stylelintcache
+.node_repl_history
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 3. PYTHON, VIRTUAL ENVIRONMENTS & COMPILED BYTECODE
+# ═════════════════════════════════════════════════════════════════════════════
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+.venv*/
+venv/
+venv*/
+ENV/
+env/
+env*/
+env.bak/
+venv.bak/
+
+# Python test, lint & type-checking caches
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 4. FRONTEND BUILDS & CLIENT CACHES (VITE, REACT)
+# ═════════════════════════════════════════════════════════════════════════════
+dist/
+dist-ssr/
+out/
+.vite/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
+.docusaurus/
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 5. SERVERLESS, CLOUD & CONTAINER ARTIFACTS
+# ═════════════════════════════════════════════════════════════════════════════
+.serverless/
+.serverless_plugins/
+.terraform/
+*.tfstate
+*.tfstate.*
+.docker/
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 6. LOCAL DATABASES, LOGS & TEMPORARY FILES
+# ═════════════════════════════════════════════════════════════════════════════
+logs/
+*.log
+*.log.*
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+dump/
+mongo-data/
+redis-data/
+*.pid
+*.seed
+*.pid.lock
+
+# Local temporary uploads & scratch dumps (Preserve directory structure)
+uploads/*
+!uploads/.gitkeep
+temp/
+tmp/
+scratch/
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 7. OS ARTIFACTS & IDE WORKSPACES
+# ═════════════════════════════════════════════════════════════════════════════
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+
+# IDEs & Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.bak

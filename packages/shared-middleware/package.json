@@ -1,0 +1,16 @@
+{
+  "name": "@cksfinbot/shared-middleware",
+  "version": "1.0.0",
+  "description": "Shared HTTP Middlewares for Multi-Tenancy, JWT Authentication, and Correlation Tracking",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test.js"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  },
+  "author": "CKsFinBot Team",
+  "license": "ISC"
+}
+

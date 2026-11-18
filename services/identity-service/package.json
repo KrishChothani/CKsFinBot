@@ -1,0 +1,25 @@
+{
+  "name": "@cksfinbot/identity-service",
+  "version": "2.0.0",
+  "description": "Identity, Multi-Tenant Hierarchy & RBAC Microservice for CKsFinBot",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test test.js"
+  },
+  "dependencies": {
+    "@cksfinbot/event-bus": "file:../../packages/event-bus",
+    "@cksfinbot/event-contracts": "file:../../packages/event-contracts",
+    "@cksfinbot/shared-logger": "file:../../packages/shared-logger",
+    "@cksfinbot/shared-middleware": "file:../../packages/shared-middleware",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.2"
+  }
+}
+

@@ -1,0 +1,26 @@
+{
+  "name": "@cksfinbot/api-gateway",
+  "version": "1.0.0",
+  "description": "Unified Edge API Gateway for CKsFinBot Microservices Architecture",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "node --test test.js"
+  },
+  "dependencies": {
+    "@cksfinbot/shared-logger": "file:../../packages/shared-logger",
+    "@cksfinbot/shared-middleware": "file:../../packages/shared-middleware",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "http-proxy-middleware": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "author": "CKsFinBot Team",
+  "license": "ISC"
+}
+

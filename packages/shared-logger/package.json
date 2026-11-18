@@ -1,0 +1,13 @@
+{
+  "name": "@cksfinbot/shared-logger",
+  "version": "1.0.0",
+  "description": "Structured JSON Logger with Tenant Context & Sensitive Data Redaction for CKsFinBot",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test.js"
+  },
+  "author": "CKsFinBot Team",
+  "license": "ISC"
+}
+

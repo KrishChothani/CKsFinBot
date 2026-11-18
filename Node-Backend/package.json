@@ -5,6 +5,7 @@
   "type": "module",
   "main": "lambda.js",
   "scripts": {
+    "test": "node --test src/Eval/syntheticGenerator.test.js src/Rules/validator.engine.test.js src/Services/clientSummary.test.js src/Services/closeReadiness.test.js src/Services/duplicateDetector.test.js src/Services/gstRecon.test.js src/Services/marketplaceSettlement.test.js src/Services/tallyExport.test.js src/Utils/money.test.js",
     "start": "node -r dotenv/config --experimental-json-modules src/index.js",
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
     "server": "nodemon --exec \"serverless offline start --stage dev\"",

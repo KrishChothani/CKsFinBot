@@ -1,0 +1,29 @@
+{
+  "name": "@cksfinbot/document-service",
+  "version": "2.0.0",
+  "description": "Document Ingestion & Storage Vault Microservice for CKsFinBot",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test test.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.712.0",
+    "@aws-sdk/s3-request-presigner": "^3.712.0",
+    "@cksfinbot/event-bus": "file:../../packages/event-bus",
+    "@cksfinbot/event-contracts": "file:../../packages/event-contracts",
+    "@cksfinbot/shared-logger": "file:../../packages/shared-logger",
+    "@cksfinbot/shared-middleware": "file:../../packages/shared-middleware",
+    "axios": "^1.7.9",
+    "cloudinary": "^2.5.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.0.3"
+  }
+}
+

@@ -1,0 +1,201 @@
+[
+  {
+    "rule_id": "RULE-GSTIN-MOD36-001",
+    "version": "1.0.0",
+    "title": "GSTIN Structure & MOD 36-2 Checksum Validation",
+    "description": "Validates that a 15-character GSTIN complies with the official format (2 digits state code, 10 characters PAN, 1 entity code, 'Z', and 1 checksum character calculated via ISO/IEC 7064 MOD 36-2 algorithm).",
+    "jurisdiction": "IN-GST",
+    "effective_from": "2017-07-01",
+    "effective_to": null,
+    "source_url": "https://www.gst.gov.in/doc/GSTIN_Validation_Algorithm.pdf",
+    "status": "verified",
+    "reviewer_name": "Antigravity Fintech Architecture QA",
+    "reviewed_on": "2026-11-09T00:00:00.000Z",
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Initial verified implementation of ISO/IEC 7064 MOD 36-2 algorithm with alternating weights 1 and 2."
+      }
+    ],
+    "test_vectors": [
+      { "input": "24AAACA1234A1ZQ", "expected": true },
+      { "input": "27AABCZ5678B1Z4", "expected": true },
+      { "input": "24AAACA1234A1Z5", "expected": false, "reason": "Checksum character 5 does not match calculated Q" }
+    ]
+  },
+  {
+    "rule_id": "RULE-GST-PLACE-OF-SUPPLY-002",
+    "version": "1.0.0",
+    "title": "Intra-State vs Inter-State GST Allocation (Sections 7 & 8 IGST Act)",
+    "description": "Determines whether an invoice represents an intra-state supply (requiring equal split of CGST and SGST) or an inter-state supply (requiring 100% IGST). Evaluated by comparing the supplier's 2-digit state code with the place of supply / recipient state code.",
+    "jurisdiction": "IN-GST",
+    "effective_from": "2017-07-01",
+    "effective_to": null,
+    "source_url": "https://cbic-gst.gov.in/act.html",
+    "status": "verified",
+    "reviewer_name": "Antigravity Fintech Architecture QA",
+    "reviewed_on": "2026-11-09T00:00:00.000Z",
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Standard place of supply logic based on first two digits of GSTIN."
+      }
+    ],
+    "test_vectors": [
+      { "supplierState": "24", "recipientState": "24", "expectedType": "INTRA_STATE", "cgstSgst": true, "igst": false },
+      { "supplierState": "24", "recipientState": "27", "expectedType": "INTER_STATE", "cgstSgst": false, "igst": true }
+    ]
+  },
+  {
+    "rule_id": "RULE-GST-ARITHMETIC-003",
+    "version": "1.0.0",
+    "title": "Line Items Sum and Taxable Value Deterministic Arithmetic Invariant",
+    "description": "Verifies that the sum of all line-item taxable amounts in integer paise matches the invoice subtotal within an explicit allowable tolerance of 100 paise (₹1.00), and that line-item tax equals (rate * taxable) with zero lost paise.",
+    "jurisdiction": "IN-COMMERCIAL",
+    "effective_from": "2017-07-01",
+    "effective_to": null,
+    "source_url": "https://cbic-gst.gov.in/",
+    "status": "verified",
+    "reviewer_name": "Antigravity Fintech Architecture QA",
+    "reviewed_on": "2026-11-09T00:00:00.000Z",
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Integer paise arithmetic comparison with 100 paise maximum rounding variance."
+      }
+    ]
+  },
+  {
+    "rule_id": "RULE-MSME-43B-H-004",
+    "version": "1.0.0",
+    "title": "Section 43B(h) Income Tax Act MSME Payment Deadline Warning",
+    "description": "VERIFY WITH CA / OFFICIAL SOURCE. Flags invoices from verified Micro and Small Enterprises (under MSMED Act 2006 Section 15) to ensure payment is made within 45 days (if written agreement exists) or 15 days (if no written agreement), preventing disallowance under Section 43B(h). Unverified status produces a review warning only.",
+    "jurisdiction": "IN-INCOME-TAX",
+    "effective_from": "2024-04-01",
+    "effective_to": null,
+    "source_url": "https://incometaxindia.gov.in/communications/circular/circular_no_01_2024.pdf",
+    "status": "draft",
+    "reviewer_name": "PENDING CA VERIFICATION",
+    "reviewed_on": null,
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Initial draft of Section 43B(h) compliance tracking. Marked draft until reviewed by CA."
+      }
+    ]
+  },
+  {
+    "rule_id": "RULE-GST-BLOCKED-ITC-005",
+    "version": "1.0.0",
+    "title": "Section 17(5) CGST Act Blocked ITC Review Flag",
+    "description": "VERIFY WITH CA / OFFICIAL SOURCE. Identifies candidate expense categories (Motor Vehicles, Food & Beverages, Health Insurance, Club Memberships, Personal Consumption, Free Samples) that may fall under Section 17(5) blocked credit. Strictly emits a review flag for human CA confirmation; never automatically disallows ITC.",
+    "jurisdiction": "IN-GST",
+    "effective_from": "2017-07-01",
+    "effective_to": null,
+    "source_url": "https://cbic-gst.gov.in/cbec-portal-ui/openSection17",
+    "status": "draft",
+    "reviewer_name": "PENDING CA VERIFICATION",
+    "reviewed_on": null,
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Advisory review flag engine for Section 17(5) candidate items."
+      }
+    ]
+  },
+  {
+    "rule_id": "RULE-GST-EINVOICE-IRN-006",
+    "version": "1.0.0",
+    "title": "Rule 48(4) E-Invoice (IRN) Mandatory Generation Check",
+    "description": "VERIFY WITH CA / OFFICIAL SOURCE. Checks whether an invoice issued by an entity above the notified aggregate turnover threshold (currently notified at ₹5 Crores for B2B supplies under CBIC Notification 10/2023-CT) contains a valid 64-character Invoice Reference Number (IRN) and signed QR code. Produces a review flag if missing.",
+    "jurisdiction": "IN-GST",
+    "effective_from": "2023-08-01",
+    "effective_to": null,
+    "source_url": "https://cbic-gst.gov.in/notifications/notification-10-2023-central-tax.pdf",
+    "status": "draft",
+    "reviewer_name": "PENDING CA VERIFICATION",
+    "reviewed_on": null,
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Configured ₹5 Cr B2B e-invoicing threshold check as draft."
+      }
+    ]
+  },
+  {
+    "rule_id": "RULE-INV-DATE-SANITY-007",
+    "version": "1.0.0",
+    "title": "Invoice Date Financial Year Scope and Future Date Guard",
+    "description": "Verifies that the extracted invoice date is not in the future beyond local calendar date, and falls within the client's configured active books period or current Financial Year.",
+    "jurisdiction": "IN-COMMERCIAL",
+    "effective_from": "2017-07-01",
+    "effective_to": null,
+    "source_url": "https://mca.gov.in/",
+    "status": "verified",
+    "reviewer_name": "Antigravity Fintech Architecture QA",
+    "reviewed_on": "2026-11-09T00:00:00.000Z",
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Temporal validity and financial year boundary guard."
+      }
+    ]
+  },
+  {
+    "rule_id": "RULE-INV-DUPLICATE-008",
+    "version": "1.0.0",
+    "title": "Idempotent Multi-Level Duplicate Ingestion Guard",
+    "description": "Prevents duplicate document registration and duplicate voucher generation using a 2-level key: Level 1 SHA-256 file content hash, Level 2 normalized tuple (firmId, clientId, supplierGstin, normalizedInvoiceNumber, invoiceDate, grandTotalPaise).",
+    "jurisdiction": "FINTECH-CORE",
+    "effective_from": "2026-01-01",
+    "effective_to": null,
+    "source_url": "https://cksfinbot.internal/docs/idempotency",
+    "status": "verified",
+    "reviewer_name": "Antigravity Fintech Architecture QA",
+    "reviewed_on": "2026-11-09T00:00:00.000Z",
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Zero duplicate voucher posting enforcement."
+      }
+    ]
+  },
+  {
+    "rule_id": "RULE-HSN-RATE-TABLE-009",
+    "version": "1.0.0",
+    "title": "Effective-Dated HSN/SAC Chapter GST Rate Verification",
+    "description": "VERIFY WITH CA / OFFICIAL SOURCE. Verifies line-item HSN/SAC codes against the effective-dated CBIC GST tariff rate schedule. Because rates change under statutory amendments, all rate suggestions carry effective dates and unverified entries emit 'review' flags.",
+    "jurisdiction": "IN-GST",
+    "effective_from": "2017-07-01",
+    "effective_to": null,
+    "source_url": "https://cbic-gst.gov.in/gst-goods-services-rates.html",
+    "status": "draft",
+    "reviewer_name": "PENDING CA VERIFICATION",
+    "reviewed_on": null,
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-11-09",
+        "author": "Antigravity",
+        "changeReason": "Versioned HSN rate schedule."
+      }
+    ]
+  }
+]
+

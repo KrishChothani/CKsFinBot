@@ -1,0 +1,103 @@
+version: '3.8'
+
+networks:
+  cksfinbot-net:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+
+services:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 1. MESSAGE BROKER — RABBITMQ WITH TOPIC EXCHANGES & MANAGEMENT UI
+  # ═══════════════════════════════════════════════════════════════════════════
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: cksfinbot-rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management Web UI (guest / guest)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - ./infrastructure/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    networks:
+      - cksfinbot-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 2. CACHE & BACKGROUND QUEUES — REDIS 7
+  # ═══════════════════════════════════════════════════════════════════════════
+  redis:
+    image: redis:7-alpine
+    container_name: cksfinbot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - cksfinbot-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 3. UNSTRUCTURED DOCUMENT METADATA — MONGODB 8.0
+  # ═══════════════════════════════════════════════════════════════════════════
+  mongodb:
+    image: mongo:8.0
+    container_name: cksfinbot-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: cksfinbot
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - cksfinbot-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 4. STRICT DOUBLE-ENTRY LEDGER & RULES — POSTGRESQL 16
+  # ═══════════════════════════════════════════════════════════════════════════
+  postgres:
+    image: postgres:16-alpine
+    container_name: cksfinbot-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: cksfinbot_user
+      POSTGRES_PASSWORD: cksfinbot_password
+      POSTGRES_DB: cksfinbot_ledger
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./Node-Backend/src/PostgreSQL/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    networks:
+      - cksfinbot-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cksfinbot_user -d cksfinbot_ledger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+

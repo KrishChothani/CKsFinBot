@@ -1,0 +1,17 @@
+{
+  "name": "@cksfinbot/event-bus",
+  "version": "1.0.0",
+  "description": "Enterprise Event Bus Client for CKsFinBot Microservices (RabbitMQ with In-Memory Fallback)",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test.js"
+  },
+  "dependencies": {
+    "@cksfinbot/event-contracts": "file:../event-contracts",
+    "amqplib": "^0.10.4"
+  },
+  "author": "CKsFinBot Team",
+  "license": "ISC"
+}
+

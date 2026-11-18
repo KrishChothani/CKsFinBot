@@ -1,0 +1,30 @@
+{
+  "name": "cksfinbot-platform",
+  "version": "2.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "test:contracts": "npm --prefix packages/event-contracts test",
+    "test:bus": "npm --prefix packages/event-bus test",
+    "test:middleware": "npm --prefix packages/shared-middleware test",
+    "test:logger": "npm --prefix packages/shared-logger test",
+    "test:gateway": "npm --prefix apps/api-gateway test",
+    "test:identity": "npm --prefix services/identity-service test",
+    "test:document": "npm --prefix services/document-service test",
+    "test:ai": "cd services/ai-extraction-service && python -m unittest tests/test_event_contracts.py",
+    "test:validation": "npm --prefix services/validation-service test",
+    "test:ledger": "npm --prefix services/ledger-service test",
+    "test:recon": "npm --prefix services/reconciliation-service test",
+    "test:tax": "npm --prefix services/tax-advisory-service test",
+    "test:marketplace": "npm --prefix services/marketplace-service test",
+    "test:close": "npm --prefix services/close-readiness-service test",
+    "test:export": "npm --prefix services/tally-export-service test",
+    "test:legacy": "npm --prefix Node-Backend test",
+    "test:microservices": "npm run test:identity && npm run test:document && npm run test:validation && npm run test:ledger && npm run test:recon && npm run test:tax && npm run test:marketplace && npm run test:close && npm run test:export",
+    "test:all": "npm run test:contracts && npm run test:bus && npm run test:middleware && npm run test:logger && npm run test:gateway && npm run test:microservices"
+  }
+}

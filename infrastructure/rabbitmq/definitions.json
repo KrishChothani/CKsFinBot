@@ -1,0 +1,206 @@
+{
+  "rabbit_version": "3.13.0",
+  "vhosts": [
+    { "name": "/" }
+  ],
+  "users": [
+    {
+      "name": "guest",
+      "password_hash": "f6vYp/h9f9+n/f9Jq4dDk/c/z8U=",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ["administrator"],
+      "limits": {}
+    }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "cksfinbot.events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "cksfinbot.dlx",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "cksfinbot.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "ai.document-ingested.q",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "cksfinbot.dlx",
+        "x-dead-letter-routing-key": "dlq.ai.document-ingested"
+      }
+    },
+    {
+      "name": "validation.document-extracted.q",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "cksfinbot.dlx",
+        "x-dead-letter-routing-key": "dlq.validation.document-extracted"
+      }
+    },
+    {
+      "name": "ledger.document-validated.q",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "cksfinbot.dlx",
+        "x-dead-letter-routing-key": "dlq.ledger.document-validated"
+      }
+    },
+    {
+      "name": "recon.voucher-committed.q",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "cksfinbot.dlx",
+        "x-dead-letter-routing-key": "dlq.recon.voucher-committed"
+      }
+    },
+    {
+      "name": "tax.voucher-committed.q",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "cksfinbot.dlx",
+        "x-dead-letter-routing-key": "dlq.tax.voucher-committed"
+      }
+    },
+    {
+      "name": "close.events.q",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "cksfinbot.dlx",
+        "x-dead-letter-routing-key": "dlq.close.events"
+      }
+    },
+    {
+      "name": "export.voucher-committed.q",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "cksfinbot.dlx",
+        "x-dead-letter-routing-key": "dlq.export.voucher-committed"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "cksfinbot.dlx",
+      "vhost": "/",
+      "destination": "cksfinbot.dlq",
+      "destination_type": "queue",
+      "routing_key": "#",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "ai.document-ingested.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.document.ingested",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "validation.document-extracted.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.extraction.completed",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "ledger.document-validated.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.validation.passed",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "recon.voucher-committed.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.voucher.committed",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "tax.voucher-committed.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.voucher.committed",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "close.events.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.voucher.committed",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "close.events.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.document.ingested",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "close.events.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.recon.completed",
+      "arguments": {}
+    },
+    {
+      "source": "cksfinbot.events",
+      "vhost": "/",
+      "destination": "export.voucher-committed.q",
+      "destination_type": "queue",
+      "routing_key": "cksfinbot.voucher.committed",
+      "arguments": {}
+    }
+  ]
+}
+

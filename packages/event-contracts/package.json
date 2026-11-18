@@ -1,0 +1,14 @@
+{
+  "name": "@cksfinbot/event-contracts",
+  "version": "1.0.0",
+  "description": "Standardized Domain Event Contracts & Envelopes for CKsFinBot Microservices",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test.js"
+  },
+  "keywords": ["fintech", "microservices", "events", "rabbitmq"],
+  "author": "CKsFinBot Team",
+  "license": "ISC"
+}
+
